@@ -1,0 +1,10 @@
+#summary GnarWall definition and history
+
+= Definition =
+
+A GnarWall is any firewall or related system built using the GnarWall project's code and/or tutorials.
+
+
+= History =
+
+GnarWall is a continuation of the NDC LFW project led by Corey Satten at the University of Washington.  Corey developed CGI scripts to produce firewall rules and configuration files for Linux systems.  The Gibraltar live CD, based on Debian GNU/Linux, was the primary platform.
