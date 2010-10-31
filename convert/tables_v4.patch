@@ -1,0 +1,72 @@
+*** tables.old	2010-10-25 15:07:26.000000000 -0700
+--- tables	2010-10-25 15:13:15.000000000 -0700
+***************
+*** 1,3 ****
+--- 1,4 ----
++ #!/bin/bash
+  #
+  PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/bin/X11 #
+  #
+***************
+*** 68,75 ****
+  # 1) adding interface tests to inside/outside packet marking and
+  # 2) editing interfaces file to change eth0:1 to eth1 if $ALTER_INTERFACES=1
+  case "$TWO_NIC_FIREWALL" in 0|'');; *)
+!   O_NIC='-i eth0'	# eth0 is outside NIC
+!   I_NIC='-i eth1'	# eth1 is inside  NIC
+  esac
+  case "$ALTER_INTERFACES" in 0|'');; *)
+    (echo 'r /etc/network/interfaces'
+--- 69,86 ----
+  # 1) adding interface tests to inside/outside packet marking and
+  # 2) editing interfaces file to change eth0:1 to eth1 if $ALTER_INTERFACES=1
+  case "$TWO_NIC_FIREWALL" in 0|'');; *)
+!   OUTSIDE_NIC='eth0'
+!   INSIDE_NIC='eth1'
+! 
+!   O_NIC="-i $OUTSIDE_NIC"
+!   I_NIC="-i $INSIDE_NIC"
+! 
+!   PHYS_DEV='-m physdev --physdev'
+! 
+!   O_NIC_PO="${PHYS_DEV}-out $OUTSIDE_NIC"
+!   O_NIC_PI="${PHYS_DEV}-in $OUTSIDE_NIC"
+!   I_NIC_PO="${PHYS_DEV}-out $INSIDE_NIC"
+!   I_NIC_PI="${PHYS_DEV}-in $INSIDE_NIC"
+  esac
+  case "$ALTER_INTERFACES" in 0|'');; *)
+    (echo 'r /etc/network/interfaces'
+***************
+*** 172,178 ****
+  
+  # mark all outbound client packets from inside LFW with $MK_I
+  
+! iptables     -t mangle $PRE	       ${I_NIC- -s $I_NET}  -j $MARK $MK_I
+  iptables     -t mangle $FWD			-i ppp+     -j $MARK $MK_IP 2>&-
+  
+  [ $? -eq 0 ] || echo "Note: VPN client rules need a newer OS version" 1>&2
+--- 183,189 ----
+  
+  # mark all outbound client packets from inside LFW with $MK_I
+  
+! iptables     -t mangle $PRE        ${I_NIC_PI- -s $I_NET}  -j $MARK $MK_I
+  iptables     -t mangle $FWD         -i ppp+     -j $MARK $MK_IP 2>&-
+  
+  [ $? -eq 0 ] || echo "Note: VPN client rules need a newer OS version" 1>&2
+***************
+*** 184,190 ****
+  case "$ACCEPT_ONLY_FROM$O_NIC" in '');; *)	# if accept_from or 2_nic_fw
+    NET=${ACCEPT_ONLY_FROM:+"$O_NET"}
+    for NET in ${NET:-0.0.0.0/0}; do
+!     iptables -t mangle $PRE	       ${O_NIC} -s $NET $MX -j $MARK $MK_X
+    done
+    MX="-m mark --mark $MK_X/$MK_X"		# redefine $MX test for external
+  esac
+--- 195,201 ----
+  case "$ACCEPT_ONLY_FROM$O_NIC" in '');; *)  # if accept_from or 2_nic_fw
+    NET=${ACCEPT_ONLY_FROM:+"$O_NET"}
+    for NET in ${NET:-0.0.0.0/0}; do
+!     iptables -t mangle $PRE        ${O_NIC_PI} -s $NET $MX -j $MARK $MK_X
+    done
+    MX="-m mark --mark $MK_X/$MK_X"       # redefine $MX test for external
+  esac
