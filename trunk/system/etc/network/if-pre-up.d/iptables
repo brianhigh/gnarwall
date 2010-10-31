@@ -1,0 +1,23 @@
+#! /bin/sh
+# Reload the firewall rules when an interface comes up
+
+set -e
+
+# Don't bother to start iptables when lo is configured.
+if [ "$IFACE" = lo ]; then
+    exit 0
+fi
+
+# Only run from ifup.
+if [ "$MODE" != start ]; then
+    exit 0
+fi
+
+# Is /usr mounted?
+if [ ! -e /usr/local/sbin/tables ]; then
+    exit 0
+fi
+
+/usr/local/sbin/tables >/dev/null 2>&1 || true
+
+exit 0
