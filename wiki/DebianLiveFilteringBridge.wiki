@@ -1,0 +1,650 @@
+#summary Debian Live as a Filtering Bridge Firewall
+#labels Featured,Phase-Implementation
+
+=Recipe: Building a GnarWall Filtering Bridge from Debian's Web-based Live Builder=
+
+Problem:  You want to run the [https://staff.washington.edu/corey/fw/ NDC LFW] scripts for your filtering bridge firewall, but you do not want to use [http://www.gibraltar.at/ Gibraltar].  Instead, you want something you can customize, run solely from your USB stick, and update when you want to.
+
+Solution:  [http://live.debian.net/ Debian Live] has a [http://live.debian.net/devel/live-build/ web-based live build web application] which can build your image in a few minutes, with many customization options.
+
+
+==GnarWall Script Files==
+
+Download the latest [http://code.google.com/p/gnarwall/downloads/list GnarWall scripts] we have shared for this project.
+
+You can extract them on a Linux system with:
+
+{{{
+$ tar xvzf gnarwall.tgz
+}}}
+
+
+==Debian Live Disk Image==
+
+Go to: [http://live-build.debian.net/cgi-bin/live-build]
+
+Fill out the web form as shown in this example configuration:
+
+{{{
+Email Address:  you@example.com
+
+[ Standard options ]
+--binary-images:    usb-hdd
+--distribution:     lenny
+--packages-lists:   minimal
+--packages:         dialog apt debconf-english parted postfix mailutils less snmp
+snmpd openssh-client openssh-server ntp ebtables bridge-utils iptstate iptraf
+iputils-ping traceroute netbase update-inetd tcpd dhcp3-client rsyslog rsync
+patch rdate genext2fs vim-tiny nano
+
+[ Advanced chroot options ]
+--linux-flavours:   686
+
+[ Advanced binary options ]
+--binary-indices:   false
+--bootappend-live:  persistent noautologin toram ip=frommedia quickreboot
+nofastboot nouser nosudo noprompt
+--memtest:          none
+}}}
+
+You will want to use your own email address, of course.
+
+We have placed a image made like this (with a similar package list) on [http://code.google.com/p/gnarwall/downloads/list our Google Code site].  You can use this if you have trouble making your own, or simply want to get started right away.
+
+
+===Installing the Image===
+
+After a few minutes you will be able to download your image.
+
+The Live Build web application will show you a link to download your files.
+
+Download the files and check the MD5 sum of the image against the MD5 sum listed in the md5sum file.
+
+You may also choose to save the other files for reference.  (The build system will include the configuration files in the build folder.)
+
+You can now copy the binary.img file to your USB stick.  Not a regular "drag and drop" sort of copy, though.  You need to write this image to the USB device with a utility like dd.
+
+Use a USB flash memory stick of at least 1 GB.  The image is less than 150 MB, but you will want space for your persistent files (log and configuration files).
+
+You will lose any data already on the USB device, so backup anything that you would want to keep.
+
+When you connect your USB device to a Linux system, you can check dmesg to see the device name it was provided.
+
+Here is how you can write the image to the USB stick, assuming it is assigned to /dev/sdb:
+
+{{{
+dd if=binary.img of=/dev/sdb bs=1M
+}}}
+
+You will likely want to add a persistent (snapshot) partition.  You can do this with fdisk and mkfs.ext3
+
+{{{
+# fdisk /dev/sdb
+n (enter)
+p (enter)
+2 (enter)
+(enter)
+(enter)
+w (enter)
+}}}
+
+This is to make a (n) new (p) primary partition, number (2), starting at the next available cylinder (the default) and ending at the last cylinder (the default), then (w) write changes and exit the fdisk utility.
+
+
+===Formatting the Partition===
+
+{{{
+# mkfs.ext3 -L live-sn /dev/sdb2
+}}}
+
+This adds the live-sn label which tells Debian Live to use it for persistent live-snapshots.
+
+If you use some other labels supported by live-initramfs, you can get other behavior, like live real-time read-write functionality.  (We opted for the snapshot option to minimize disk activity.)
+
+
+===Automating the Disk Preparation===
+
+All of steps in this section (Installing the Image and Formatting the Partition) can be accomplished by running this bash shell script:
+
+{{{
+#!/bin/bash
+
+# write_usb.sh
+#
+# Copy usb-hdd image to USB device and fill rest of space with ext3 partition.
+
+# Set the defaults
+DEV=/dev/sdb
+IMG=binary.img
+
+# Check for needed utilities
+for i in parted dd mkfs.ext3 sudo awk sed mount umount; do \
+   which $i >/dev/null 
+   if [ "$?" != 0 ]; then echo "Can't find $i, aborting..."; exit 1; fi
+done
+
+# Prompt for device
+echo -n "Enter device name to wipe: ($DEV) "
+read NEWDEV
+[ -n "$NEWDEV" ] && DEV="$NEWDEV"
+if [ ! -b "$DEV" ]; then \
+   echo "$DEV is not a valid block device, aborting..."
+   exit 1
+fi 
+
+# Prompt for image file
+echo -n "Enter filename of USB image: ($IMG) "
+read NEWIMG
+[ -n "$NEWIMG" ] && IMG="$NEWIMG"
+if [ ! -r "$IMG" ]; then \
+   echo "Can't read $IMG, aborting..."
+   exit 1
+fi
+
+# Set some command abbreviations
+PTD_PRN="parted ${DEV} --script print"
+PTD_MKP="parted ${DEV} --script -- mkpart primary"
+
+# Check to make sure we can wipe this disk
+sudo $PTD_PRN
+echo -n "Are you sure you want to wipe this disk? (y/n) "
+read ANS
+[ "$ANS" != "y" ] && exit 0
+
+unmount_all() {
+   # Unmount partitions if any are mounted
+   for i in `mount | grep "$1" | awk '{ print $1 }'`; do \
+      echo "Unmounting ${i}..."
+      sudo umount "$i" || return 1
+   done
+}
+
+# Unmount all partitions of usb device if any are already mounted
+unmount_all "$DEV" || exit 1
+
+# Copy the usb image to usb device
+sudo dd if="$IMG" of="${DEV}" bs=1M || or exit 1
+
+# Calculate the start position of new partition in MB.
+END=`sudo $PTD_PRN | awk '/^[ ]*1/ { print $3 }' | sed 's/MB//g'`
+let START=END+1
+
+# Use -1 for end position to take all remaining space
+END=-1
+
+# Create the new partition
+sudo $PTD_MKP $START $END || exit 1
+
+# Allow some time for partitions to automount, if system is set to do that
+sleep 5
+
+# Unmount all partitions of usb device if any are already mounted
+unmount_all "$DEV" || exit 1
+
+# Format the new partition and print new table
+sudo mkfs.ext3 -L live-sn "${DEV}2" 
+sudo $PTD_PRN
+}}}
+
+
+===Further Customization===
+
+You may also wish to add new files or edit the syslinux configuration files on the USB image.
+
+Here's how:
+
+Mount the first partition:
+
+{{{
+# mkdir /mnt/sdb1
+# mount /dev/sdb1 /mnt/sdb1
+# cd /mnt/sdb1/syslinux
+}}}
+
+In that folder, you can add a custom splash image (and edit stdmenu.cfg for this image in the "menu background" setting if the new image has a different filename than the default splash.png).
+
+You may also want to modify your boot parameters in the live.cfg file.
+
+And you will probably want to set a countdown timer for syslinux so that it can boot without requiring user input.  If you edit syslinux.cfg and change the timeout setting to 100, you will get a 10 second countdown.
+
+You can also place your other system files on the USB stick's persistent partition:
+
+{{{
+# mkdir /mnt/sdb2
+# mount /dev/sdb2 /mnt/sdb2
+# cd /mnt/sdb2
+}}}
+
+You can place your NDC LFW tables file in usr/local/sbin:
+
+{{{
+# mkdir -p usr/local/sbin
+# cp ~/tables usr/local/sbin
+}}}
+
+You can place your NDC LFW interfaces file in etc/network:
+
+{{{
+# mkdir -p etc/network
+# cp ~/interfaces etc/network
+}}}
+
+
+==Updating the NDC LFW Generated Scripts==
+
+Since things have changed a bit in the Linux world since the 2.4 kernel days (the kernel version that the NDC LFW scripts were designed for), we need to make some changes to these files.
+
+We have done some testing with the [https://staff.washington.edu/corey/fw/variations.html#variation4 Variation 4] (filtering bridge) scripts.  We have a bash script and patch (below) to update a Variation 4 interfaces and tables file.  Please read the comments in the script carefully and modify as needed.  Also, look through the patch file to see what is actually changing.
+
+lfw_fix_v4.sh:
+
+
+{{{
+#!/bin/bash
+
+# lfw_fix_v4.sh
+#
+# This script (and patch file) will adapt Corey Satten's Variation #4
+# NDC LFW scripts for use with Debian Live (Lenny and newer) and other
+# modern Debian-based Linux distributions. 
+#
+# DANGER: This has NOT been widely tested.  USE AT YOUR OWN RISK!
+#
+# NOTE: This will work only for 2-NIC configurations where eth0 is the
+# "outside NIC" and eth1 is the "inside NIC".  If yours are reversed,
+# then modify the patch file accordingly before you run this script.
+#
+# For more NDC LFW information: http://staff.washington.edu/corey/fw/ 
+# Debian Live Builder: http://live-build.debian.net/cgi-bin/live-build 
+
+# Check for presence of writable tables and interfaces files
+if [ ! -w tables ] || [ ! -w interfaces ]; then \
+    echo "Can't find or write to tables or interfaces files!"
+    exit 1
+fi
+
+# Make backups if they are not already present
+if [ ! -e tables.old ]; then cp tables tables.old; fi
+if [ ! -e interfaces.old ]; then cp interfaces interfaces.old; fi
+
+# Fix deprecated "intrapositioned negation" in rules (--option ! this)
+# This avoids a warning starting with iptables 1.4.3+ (Squeeze has 1.4.8+)
+# See PARAMETERS in http://ipset.netfilter.org/iptables.man.html
+perl -pi -e 's/(-[\w-]+) ! ([^-]+)/! $1 $2/g' tables
+
+# Use new Netfilter "-m physdev --physdev-(in|out) IFACE" sytax
+# Where in/out means incoming/outgoing and IFACE is eth0, eth1, etc.
+# (The old -i ethN syntax does not work with a bridge [br0] anymore.)
+# Required: iptables 1.3.6+ and kernel with physdev match support
+# (CONFIG_IP_NF_MATCH_PHYSDEV=m or CONFIG_IP_NF_MATCH_PHYSDEV=y).
+patch -l -p0 < tables_v4.patch
+
+# This patch does not modify generated rules from the web form, so warn.
+echo "You may need to edit your 'generated' rules for *_PO or *_PI."
+
+# Well, we will attempt to catch the broadcast and multicast rules.
+# This will change the O_NIC to O_NIC_PI (outside nic, incoming traffic)
+perl -pi -e 's/(--pkt-type (broad|multi)cast \$O_NIC)\b/${1}_PI/g' tables
+
+# Use rsyslog (default log daemon in Debian Lenny+) instead of klogd
+perl -pi -e 's/klogd/rsyslog/g' interfaces
+}}}
+
+
+tables_v4.patch:
+
+
+{{{
+*** tables.old	2010-10-25 15:07:26.000000000 -0700
+--- tables	2010-10-25 15:13:15.000000000 -0700
+***************
+*** 1,3 ****
+--- 1,4 ----
++ #!/bin/bash
+  #
+  PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/bin/X11 #
+  #
+***************
+*** 68,75 ****
+  # 1) adding interface tests to inside/outside packet marking and
+  # 2) editing interfaces file to change eth0:1 to eth1 if $ALTER_INTERFACES=1
+  case "$TWO_NIC_FIREWALL" in 0|'');; *)
+!   O_NIC='-i eth0'	# eth0 is outside NIC
+!   I_NIC='-i eth1'	# eth1 is inside  NIC
+  esac
+  case "$ALTER_INTERFACES" in 0|'');; *)
+    (echo 'r /etc/network/interfaces'
+--- 69,86 ----
+  # 1) adding interface tests to inside/outside packet marking and
+  # 2) editing interfaces file to change eth0:1 to eth1 if $ALTER_INTERFACES=1
+  case "$TWO_NIC_FIREWALL" in 0|'');; *)
+!   OUTSIDE_NIC='eth0'
+!   INSIDE_NIC='eth1'
+! 
+!   O_NIC="-i $OUTSIDE_NIC"
+!   I_NIC="-i $INSIDE_NIC"
+! 
+!   PHYS_DEV='-m physdev --physdev'
+! 
+!   O_NIC_PO="${PHYS_DEV}-out $OUTSIDE_NIC"
+!   O_NIC_PI="${PHYS_DEV}-in $OUTSIDE_NIC"
+!   I_NIC_PO="${PHYS_DEV}-out $INSIDE_NIC"
+!   I_NIC_PI="${PHYS_DEV}-in $INSIDE_NIC"
+  esac
+  case "$ALTER_INTERFACES" in 0|'');; *)
+    (echo 'r /etc/network/interfaces'
+***************
+*** 172,178 ****
+  
+  # mark all outbound client packets from inside LFW with $MK_I
+  
+! iptables     -t mangle $PRE	       ${I_NIC- -s $I_NET}  -j $MARK $MK_I
+  iptables     -t mangle $FWD			-i ppp+     -j $MARK $MK_IP 2>&-
+  
+  [ $? -eq 0 ] || echo "Note: VPN client rules need a newer OS version" 1>&2
+--- 183,189 ----
+  
+  # mark all outbound client packets from inside LFW with $MK_I
+  
+! iptables     -t mangle $PRE        ${I_NIC_PI- -s $I_NET}  -j $MARK $MK_I
+  iptables     -t mangle $FWD         -i ppp+     -j $MARK $MK_IP 2>&-
+  
+  [ $? -eq 0 ] || echo "Note: VPN client rules need a newer OS version" 1>&2
+***************
+*** 184,190 ****
+  case "$ACCEPT_ONLY_FROM$O_NIC" in '');; *)	# if accept_from or 2_nic_fw
+    NET=${ACCEPT_ONLY_FROM:+"$O_NET"}
+    for NET in ${NET:-0.0.0.0/0}; do
+!     iptables -t mangle $PRE	       ${O_NIC} -s $NET $MX -j $MARK $MK_X
+    done
+    MX="-m mark --mark $MK_X/$MK_X"		# redefine $MX test for external
+  esac
+--- 195,201 ----
+  case "$ACCEPT_ONLY_FROM$O_NIC" in '');; *)  # if accept_from or 2_nic_fw
+    NET=${ACCEPT_ONLY_FROM:+"$O_NET"}
+    for NET in ${NET:-0.0.0.0/0}; do
+!     iptables -t mangle $PRE        ${O_NIC_PI} -s $NET $MX -j $MARK $MK_X
+    done
+    MX="-m mark --mark $MK_X/$MK_X"       # redefine $MX test for external
+  esac
+}}}
+
+These two files (lfw_fix_v4.sh and tables_v4.patch) can be downloaded [http://code.google.com/p/gnarwall/downloads/list here].  After you extract them from the archive, you will want to place them both in the same folder with your tables and interfaces files.  Then you can run the lfw_fix_v4.sh bash script.
+
+It should be noted that the [http://www.debian.org/doc/manuals/reference/ch05.en.html#_the_basic_syntax_of_etc_network_interfaces interfaces file] will still need some more fixing to be fully compliant with the [http://wiki.debian.org/BridgeNetworkConnections#A.2BAC8-etc.2BAC8-network.2BAC8-interfacesandbridging modern Debian way of doing things].
+
+
+So here is how an updated interfaces script might look for a Variation 4 Filtering Bridge:
+
+{{{
+# /etc/network/interfaces -- configuration file for ifup(8), ifdown(8). Run:
+#   /etc/init.d/networking restart
+# to execute this file before the next reboot
+# Note: each interface must have its own paragraph separated by blank lines
+
+# The loopback interface
+auto lo
+iface lo inet loopback
+
+iface eth0 inet manual
+
+iface eth1 inet manual
+
+# this is the native IP address of your firewall itself
+auto br0
+iface br0 inet static
+    address 192.168.1.30
+    netmask 255.255.255.0
+    network 192.168.1.0
+    broadcast 192.168.1.255
+    gateway 192.168.1.100
+    bridge_ports eth0 eth1
+    bridge_fd       5
+    bridge_hello    2
+    bridge_maxage   5
+    bridge_stp      on
+    
+# this is the last line of /etc/network/interfaces
+}}}
+
+(That file can be found in the GnarWall package as interfaces.v4.)
+
+And this iptables start script could be saved as: /etc/network/if-pre-up.d/iptables
+
+{{{
+#! /bin/sh
+# Reload the firewall rules when an interface comes up
+
+set -e
+
+# Don't bother to start iptables when lo is configured.
+if [ "$IFACE" = lo ]; then
+	exit 0
+fi
+
+# Only run from ifup.
+if [ "$MODE" != start ]; then
+	exit 0
+fi
+
+# Is /usr mounted?
+if [ ! -e /usr/local/sbin/tables ]; then
+	exit 0
+fi
+
+/usr/local/sbin/tables >/dev/null 2>&1 || true
+
+exit 0
+}}}
+
+
+We will update this page soon with a revised conversion script.  Until then, this version will work well enough for testing.  Of course, ideally, we will want to update the NDC LFW generator application, so no special conversion scripts will be needed, but that will have to wait a bit...
+
+
+==Suggested Additional Files==
+
+We have found it useful to place the following files in the persistent partition:
+
+{{{
+etc/resolv.conf
+etc/timezone
+etc/hostname
+etc/mailname
+etc/hosts
+etc/ntp.conf
+}}}
+
+... and anything else you might have customized, such as (ip)tables and interfaces.  It all depends on what you are trying to do, and what has already been configured using the boot parameters (like hostname or timezone).
+
+You can also use a configuration script, much like gnarwall_setup.sh below, to make these common etc/ files.  Be sure to set the first group of configuration variables.  (TIP: Run this script from within the _live_ system.)
+
+{{{
+#!/bin/sh
+#
+# gnarwall_setup.sh
+
+MY_HOSTNAME=firewall
+MY_DOMAINNAME=mydept.example.com
+MY_TIMEZONE='America/Los_Angeles'
+MY_TIMESERVER=time.example.com
+MY_NAMESERVER1=192.168.0.221
+MY_NAMESERVER2=192.168.0.222
+MY_DNSSEARCH="$MY_DOMAINNAME example.com"
+
+MY_GNARWALL=/etc/gnarwall
+MY_CONFIGURED=$MY_GNARWALL/configured
+
+# Create /etc/resolv.conf if it does not already exist
+ERC=/etc/resolv.conf
+
+[ -s $ERC ] || cat > $ERC <<EOF
+search $MY_DNSSEARCH
+nameserver $MY_NAMESERVER1
+nameserver $MY_NAMESERVER2
+EOF
+
+# Set time from campus time server
+rdate -s $MY_TIMESERVER
+
+# Skip the rest of this script if the system has already been configured
+[ -e $MY_CONFIGURED ] && exit 0
+
+# Create an /etc/ntp.conf if it does not mention MY_TIMESERVER
+ENC=/etc/ntp.conf
+
+([ -s $ENC ] && grep -q $MY_TIMESERVER $ENC) || cat > $ENC <<EOF
+disable stats
+driftfile /var/lib/ntp/drift
+broadcastdelay  0.008
+server $MY_TIMESERVER
+EOF
+
+# Reconfigure timezone
+UBR=/usr/sbin/dpkg-reconfigure
+ETZ=/etc/timezone
+PKG=tzdata
+echo "$MY_TIMEZONE" > $ETZ
+$UBR -f noninteractive  $PKG 2>/dev/null
+
+# Set mailname and hostname if they do not contain my FQDN
+FQDN=${MY_HOSTNAME}.${MY_DOMAINNAME}
+EMN=/etc/mailname
+EHN=/etc/hostname
+BHN=/bin/hostname
+$BHN | grep -q ${MY_HOSTNAME} || $BHN ${MY_HOSTNAME}
+([ -s $EHN ] && grep -q $FQDN $EHN) || echo $FQDN > $EHN
+([ -s $EMN ] && grep -q $FQDN $EMN) || echo $FQDN > $EMN
+
+# Create /etc/hosts if it does not already exist
+EH=/etc/hosts
+
+[ -s $EH ] || cat > $EH <<EOF
+127.0.0.1 localhost
+127.0.1.1 $FQDN ${MY_HOSTNAME}
+
+# The following lines are desirable for IPv6 capable hosts
+::1     ip6-localhost ip6-loopback
+fe00::0 ip6-localnet
+ff00::0 ip6-mcastprefix
+ff02::1 ip6-allnodes
+ff02::2 ip6-allrouters
+ff02::3 ip6-allhosts
+EOF
+
+# Leave a trace that this script has run at least once to completion
+mkdir -p $MY_GNARWALL
+touch $MY_CONFIGURED
+
+exit 0
+}}}
+
+It only creates configuration files if they do not already exist.  Most of the script is not even run if a placeholder file (/etc/gnarwall/configured) already exists.  The placeholder file is created the first time the script is run.  The time is set with rdate.
+
+We run our configuration script from a line in our /etc/rc.local file:
+
+{{{
+#!/bin/sh -e
+#
+# rc.local
+#
+# This script is executed at the end of each multiuser runlevel.
+# Make sure that the script will "exit 0" on success or any other
+# value on error.
+
+/usr/local/sbin/gnarwall_setup.sh
+
+exit 0
+}}}
+
+To do a clean configuration reset, we run:
+
+{{{
+# /usr/local/sbin/gnarwall-reset.sh
+# /usr/local/sbin/gnarwall-setup.sh
+}}}
+Where, /usr/local/sbin/gnarwall-reset.sh contains:
+
+{{{
+#!/bin/sh
+
+# gnarwall-reset.sh
+#
+# Remove configuration files so they will be recreated later.
+
+CONFFILE=/etc/gnarwall/configured
+
+cd /etc && rm -f resolv.conf timezone hostname mailname hosts ntp.conf
+[ -e $CONFFILE ] && rm -f $CONFFILE
+}}}
+
+
+All of these configuration scripts are secured with:
+
+{{{
+# chown root /etc/rc.local /usr/local/sbin/*
+# chmod 0700 /etc/rc.local /usr/local/sbin/*
+}}}
+
+If you prefer, you can simply do all of the customization manually after you boot the USB stick.  Your changes will be saved to the persistent partition when you reboot.  Alternatively, you can also force changes to the persistent partition (without rebooting) with:
+
+{{{
+# live-snapshot -f
+}}}
+
+... which acts something like save-config in Gibraltar.  If you want, you can place a wrapper script for this command in /usr/local/sbin/save-config:
+
+{{{
+#!/bin/sh
+
+/sbin/live-snapshot -f
+}}}
+
+But the very first thing you should do when you log into the live system is change the root password from the default empty password (no password)!
+
+You can also install and remove software with apt-get, aptitude, and dpkg -- from within the live system.  Just remember that package caches can fill your persistent partition fairly quickly, so run the associated clean command before restarting or snapshotting.  
+
+For packages you included in your live build parameters, such as tzdata or postfix, you may want to run dpkg-reconfigure on them once to make sure they are configured they way you want them to be.
+
+
+==Give it a try==
+
+Please give this a try and let us know how it goes.  Also, any feedback on this recipe will be very helpful.
+
+
+==Software License==
+
+Our code is licensed under the [http://www.gnu.org/licenses/gpl.html GNU General Public License]:
+
+{{{
+GnarWall: Logical Firewall and Filtering Bridge
+Copyright © 2010 University of Washington
+
+This file is part of GnarWall.
+
+GnarWall is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+GnarWall is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with GnarWall.  If not, see <http://www.gnu.org/licenses/>.
+}}}
+
+
+==Tutorial License==
+
+This tutorial is licensed under the [http://www.gnu.org/licenses/fdl.html GNU Free Documentation License]:
+
+{{{
+Permission is granted to copy, distribute and/or modify this
+document under the terms of the GNU Free Documentation License,
+Version 1.3 or any later version published by the Free Software
+Foundation; with no Invariant Sections, no Front-Cover Texts and
+no Back-Cover Texts.  A copy of the license is included in the
+section entitled "GNU Free Documentation License".
+}}}
