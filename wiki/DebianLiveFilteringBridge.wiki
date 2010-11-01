@@ -201,7 +201,7 @@ Mount the first partition:
 # cd /mnt/sdb1/syslinux
 }}}
 
-In that folder, you can add a custom splash image (and edit stdmenu.cfg for this image in the "menu background" setting if the new image has a different filename than the default splash.png).
+In that folder, you can add a custom [http://gnarwall.googlecode.com/files/splash.zip splash image] (and edit stdmenu.cfg for this image in the "menu background" setting if the new image has a different filename than the default splash.png).
 
 You may also want to modify your boot parameters in the live.cfg file.
 
