@@ -5,6 +5,7 @@
 MY_HOSTNAME=firewall
 MY_DOMAINNAME=mydept.example.com
 MY_TIMEZONE='America/Los_Angeles'
+MY_LOCALE='LANG=en_US.UTF-8'
 MY_TIMESERVER=time.example.com
 MY_NAMESERVER1=192.168.0.221
 MY_NAMESERVER2=192.168.0.222
@@ -69,6 +70,10 @@ ff02::1 ip6-allnodes
 ff02::2 ip6-allrouters
 ff02::3 ip6-allhosts
 EOF
+
+# Create /etc/default/locale if it does not already contain my locale 
+EDL=/etc/default/locale
+([ -s $EDL ] && grep -q $MY_LOCALE $EDL) || echo $MY_LOCALE > $EDL
 
 # Leave a trace that this script has run at least once to completion
 mkdir -p $MY_GNARWALL
