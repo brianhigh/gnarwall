@@ -10,6 +10,7 @@ MY_TIMESERVER=time.example.com
 MY_NAMESERVER1=192.168.0.221
 MY_NAMESERVER2=192.168.0.222
 MY_DNSSEARCH="$MY_DOMAINNAME example.com"
+MY_BELL='none'            # Set to 'none', 'visible', or '' for audible
 
 MY_GNARWALL=/etc/gnarwall
 MY_CONFIGURED=$MY_GNARWALL/configured
@@ -74,6 +75,24 @@ EOF
 # Create /etc/default/locale if it does not already contain my locale 
 EDL=/etc/default/locale
 ([ -s $EDL ] && grep -q $MY_LOCALE $EDL) || echo $MY_LOCALE > $EDL
+
+# Set bell-style in /etc/initrc
+EIR=/etc/inputrc
+SBS='set bell-style'
+PERL=/usr/bin/perl
+
+if [ -x $PERL -a -w $EIR ]; then \
+   if [ -z "$MY_BELL" ]; then \
+      # Comment out all "set bell style" lines to enable default bell
+      $PERL -pi -e "s/^$SBS/# $SBS/g" $EIR
+   else \
+      # Remove all "set bell style" lines and append new one
+      $PERL -ni -e "print unless /$SBS/" $EIR
+      grep -q "^$SBS $MY_BELL" $EIR || echo "$SBS $MY_BELL" >> $EIR
+   fi
+else
+   echo "Can't execute $PERL or write to $EIR!  Won't change bell-style!"
+fi
 
 # Leave a trace that this script has run at least once to completion
 mkdir -p $MY_GNARWALL
