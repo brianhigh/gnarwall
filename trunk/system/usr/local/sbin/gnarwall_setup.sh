@@ -6,6 +6,7 @@ MY_HOSTNAME=firewall
 MY_DOMAINNAME=mydept.example.com
 MY_TIMEZONE='America/Los_Angeles'
 MY_LOCALE='LANG=en_US.UTF-8'
+MY_EMAIL='admin@example.com'
 MY_TIMESERVER=time.example.com
 MY_NAMESERVER1=192.168.0.221
 MY_NAMESERVER2=192.168.0.222
@@ -79,23 +80,38 @@ EDL=/etc/default/locale
 # Set bell-style in /etc/initrc
 EIR=/etc/inputrc
 SBS='set bell-style'
-PERL=/usr/bin/perl
 
-if [ -x $PERL -a -w $EIR ]; then \
+if [ -w $EIR ]; then \
    if [ -z "$MY_BELL" ]; then \
       # Comment out all "set bell style" lines to enable default bell
-      $PERL -pi -e "s/^$SBS/# $SBS/g" $EIR
+      sed -i "s/^$SBS/# $SBS/g" $EIR
    else \
       # Remove all "set bell style" lines and append new one
-      $PERL -ni -e "print unless /$SBS/" $EIR
-      grep -q "^$SBS $MY_BELL" $EIR || echo "$SBS $MY_BELL" >> $EIR
+      sed -i -n "/$SBS/!p" $EIR
+      echo "$SBS $MY_BELL" >> $EIR
    fi
 else
-   echo "Can't execute $PERL or write to $EIR!  Won't change bell-style!"
+   echo "Can't write to $EIR!  Can't change bell-style!"
 fi
+
+# Modify logcheck ignore rules for ntpd to ignore "time sync status change"
+# See:  http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=498992
+# This is fixed in logcheck version 1:4.2.6+dfsg-1 on Sat, 26 Dec 2009
+LCN=/etc/logcheck/ignore.d.server/ntp
+LCR1='kernel time sync (disabled|enabled)'
+LCR2='kernel time sync (enabled|status( change)?)'
+([ -s $LCN ] && grep -qF "$LCR1" $LCN) && sed -i "s/$LCR1/$LCR2/" $LCN
+
+# Configure adminstrative email address for logwatch, postmaster, and root.
+LCC=/etc/logcheck/logcheck.conf
+EA=/etc/aliases
+UBN=/usr/bin/newaliases
+[ -s $LCC ] && sed -i "s/^\(SENDMAILTO\)=.*$/\1='$MY_EMAIL'/" $LCC
+sed -i "s/^\(postmaster\|logcheck\|root\):.*$/\1:\t$MY_EMAIL/" $EA
+[ -x $UBN ] && $UBN
 
 # Leave a trace that this script has run at least once to completion
 mkdir -p $MY_GNARWALL
 touch $MY_CONFIGURED
 
-exit 0
+exit 
