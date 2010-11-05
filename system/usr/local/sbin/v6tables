@@ -1,0 +1,74 @@
+#!/bin/bash
+
+# v6tables   -  Blocks all ipv6 traffic (input, output, forward)
+#
+# Based on a script compiled by Ruslan Abuzant <ruslan@abuzant.com>
+# Found here: http://forums.digitalpoint.com/showthread.php?t=1031456
+# Posted on Sep 17th 2008 at 11:35 pm
+#
+# Containing these comments:
+# =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+#   File: SIG-antiDDoS.sh
+#
+#   Compiler: Ruslan Abuzant <ruslan@abuzant.com>
+#             PS> Collected From Lots Of Sources
+#             PS> Credits: Real Authors (no idea)
+#
+#   URL: http://www.liteforex.org/
+#
+#   License: GNU GPL (version 2, or any later version).
+# =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+#
+# GnarWall: Logical Firewall and Filtering Bridge
+# Copyright (c) 2010 University of Washington
+#
+#    This file is part of GnarWall.
+#
+#    GnarWall is free software: you can redistribute it and/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation, either version 3 of the License, or
+#    (at your option) any later version.
+#
+#    GnarWall is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#    You should have received a copy of the GNU General Public License
+#    along with GnarWall.  If not, see <http://www.gnu.org/licenses/>.
+
+IP6TABLES="/sbin/ip6tables"
+
+#----------------------------------------------------------------------
+# Completely disable IPv6.
+#----------------------------------------------------------------------
+
+# Block all IPv6 traffic
+# If the ip6tables command is available, try to block all IPv6 traffic.
+
+[ -x $IP6TABLES ] || (echo "$0: $IP6TABLES not found!"; exit 1)
+
+# Set the default policies
+# drop everything
+$IP6TABLES -P INPUT DROP 2>/dev/null
+$IP6TABLES -P FORWARD DROP 2>/dev/null
+$IP6TABLES -P OUTPUT DROP 2>/dev/null
+
+# The mangle table can pass everything
+$IP6TABLES -t mangle -P PREROUTING ACCEPT 2>/dev/null
+$IP6TABLES -t mangle -P INPUT ACCEPT 2>/dev/null
+$IP6TABLES -t mangle -P FORWARD ACCEPT 2>/dev/null
+$IP6TABLES -t mangle -P OUTPUT ACCEPT 2>/dev/null
+$IP6TABLES -t mangle -P POSTROUTING ACCEPT 2>/dev/null
+
+# Delete all rules.
+$IP6TABLES -F 2>/dev/null
+$IP6TABLES -t mangle -F 2>/dev/null
+
+# Delete all chains.
+$IP6TABLES -X 2>/dev/null
+$IP6TABLES -t mangle -X 2>/dev/null
+
+# Zero all packets and counters.
+$IP6TABLES -Z 2>/dev/null
+$IP6TABLES -t mangle -Z 2>/dev/null

@@ -96,11 +96,23 @@ fi
 
 # Modify logcheck ignore rules for ntpd to ignore "time sync status change"
 # See:  http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=498992
-# This is fixed in logcheck version 1:4.2.6+dfsg-1 on Sat, 26 Dec 2009
+# This is fixed in logcheck version 1:4.2.6+dfsg-1 (26 Dec 2009).
+BCM=/bin/chmod
 LCN=/etc/logcheck/ignore.d.server/ntp
-LCR1='kernel time sync (disabled|enabled)'
-LCR2='kernel time sync (enabled|status( change)?)'
-([ -s $LCN ] && grep -qF "$LCR1" $LCN) && sed -i "s/$LCR1/$LCR2/" $LCN
+LCN1='kernel time sync (disabled|enabled)'
+LCN2='kernel time sync (enabled|status( change)?)'
+([ -w $LCN ] && grep -qF "$LCN1" $LCN) && sed -i "s/$LCN1/$LCN2/" $LCN
+([ -w $LCN ] && [ -x $BCM ]) && $BCM 640 $LCN
+
+# Also, ignore rsyslogd restarts.  Fixed in rsyslog 3.20.5-1 (08 Apr 2009).
+# See:  http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=522164
+BCM=/bin/chmod
+LCR=/etc/logcheck/ignore.d.server/rsyslog
+[ -s $LCR ] || cat > $LCR <<EOF
+^\w{3} [ :0-9]{11} [._[:alnum:]-]+ kernel:( \[[[:digit:]]+\.[[:digit:]]+\])? imklog [0-9.]+, log source = /proc/kmsg started.$
+^\w{3} [ :0-9]{11} [._[:alnum:]-]+ rsyslogd: \[origin software="rsyslogd" swVersion="[0-9.]+" x-pid="[0-9]+" x-info="http://www.rsyslog.com"\] restart$
+EOF
+([ -w $LCR ] && [ -x $BCM ]) && $BCM 640 $LCR
 
 # Configure adminstrative email address for logwatch, postmaster, and root.
 LCC=/etc/logcheck/logcheck.conf
@@ -114,4 +126,4 @@ sed -i "s/^\(postmaster\|logcheck\|root\):.*$/\1:\t$MY_EMAIL/" $EA
 mkdir -p $MY_GNARWALL
 touch $MY_CONFIGURED
 
-exit 
+exit 0
