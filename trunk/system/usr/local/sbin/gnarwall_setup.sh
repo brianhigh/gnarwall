@@ -11,7 +11,7 @@ MY_TIMESERVER=time.example.com
 MY_NAMESERVER1=192.168.0.221
 MY_NAMESERVER2=192.168.0.222
 MY_DNSSEARCH="$MY_DOMAINNAME example.com"
-MY_DISABLE_IPV6=1         # 1=True (to disable ipv6) or 2=False (don't)
+MY_DISABLE_IPV6=1         # 1=True (to disable ipv6) or 0=False (don't)
 MY_BELL='none'            # Set to 'none', 'visible', or '' for audible
 
 MY_GNARWALL=/etc/gnarwall
