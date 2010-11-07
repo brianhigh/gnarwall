@@ -11,6 +11,7 @@ MY_TIMESERVER=time.example.com
 MY_NAMESERVER1=192.168.0.221
 MY_NAMESERVER2=192.168.0.222
 MY_DNSSEARCH="$MY_DOMAINNAME example.com"
+MY_DISABLE_IPV6=1         # 1=True (to disable ipv6) or 2=False (don't)
 MY_BELL='none'            # Set to 'none', 'visible', or '' for audible
 
 MY_GNARWALL=/etc/gnarwall
@@ -121,6 +122,23 @@ UBN=/usr/bin/newaliases
 [ -s $LCC ] && sed -i "s/^\(SENDMAILTO\)=.*$/\1='$MY_EMAIL'/" $LCC
 sed -i "s/^\(postmaster\|logcheck\|root\):.*$/\1:\t$MY_EMAIL/" $EA
 [ -x $UBN ] && $UBN
+
+# Disable IPv6
+# See: http://www.debian-administration.org/article/409/
+EML=/etc/modprobe.d/00local.conf
+PI6=/proc/sys/net/ipv6
+ANP='alias net-pf-10 off'
+AIO='alias ipv6 off'
+if [ "$MY_DISABLE_IPV6" == "1" ]; then \
+   if [ -e $EML ]; then \
+      grep -q "$ANP" $EML || echo "$ANP" >> $EML
+      grep -q "$AIO" $EML || echo "$AIO" >> $EML
+   else \
+      echo "$ANP" >> $EML
+      echo "$AIO" >> $EML
+   fi
+   [ -d $PI6 ] && echo "[*] Reboot to disable IPv6!"
+fi
 
 # Leave a trace that this script has run at least once to completion
 mkdir -p $MY_GNARWALL
