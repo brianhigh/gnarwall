@@ -33,9 +33,9 @@ Email Address:  you@example.com
 --distribution:     lenny
 --packages-lists:   minimal
 --packages:         dialog apt debconf-english parted postfix mailutils less snmp
-snmpd openssh-client openssh-server ntp ebtables bridge-utils iptstate iptraf
-iputils-ping traceroute netbase update-inetd tcpd dhcp3-client rsyslog rsync
-patch rdate genext2fs vim-tiny nano
+                    snmpd openssh-client openssh-server ntp ebtables bridge-utils
+                    logwatch iptraf iputils-ping logcheck netbase update-inetd tcpd 
+                    dhcp3-client rsyslog rsync patch rdate genext2fs vim-tiny nano
 
 [ Advanced chroot options ]
 --linux-flavours:   686
@@ -43,7 +43,7 @@ patch rdate genext2fs vim-tiny nano
 [ Advanced binary options ]
 --binary-indices:   false
 --bootappend-live:  persistent noautologin toram ip=frommedia quickreboot
-nofastboot nouser nosudo noprompt
+                    nofastboot nouser nosudo noprompt
 --memtest:          none
 }}}
 
