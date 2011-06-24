@@ -50,7 +50,7 @@ Email Address:  you@example.com
 
 You will want to use your own email address, of course.
 
-We have placed a image made like this on [http://goo.gl/zBekf our Google Docs site].  You can use this if you have trouble making your own, or simply want to get started right away.
+We have placed a image made like this on [http://goo.gl/Iv0BO our Google Docs site].  You can use this if you have trouble making your own, or simply want to get started right away.
 
 
 ===Installing the Image===
