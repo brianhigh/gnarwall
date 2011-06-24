@@ -1,0 +1,277 @@
+HOW TO SETUP A "SQUEEZE" DEBIAN LIVE USB SYSTEM WITH GNARWALL
+
+Assuming you are going to be updating from a Gibraltar NDC LFW 
+Variation 4 system...
+
+1.  Get the Gnarwall files and place them in a suitable folder
+on your linux system.  (These archive files are gnarwall*.tgz
+and gnarwall_squeeze_splash.zip and possibly squeeze_usb_*.tgz.)
+
+Since you will be running sudo, root will need access to the
+installer files, so a network-mounted home folder may not work 
+for this.  Use a folder on the local filesystem instead.
+
+2.  Uncompress the Gnarwall package archives into that folder.
+
+3.  Get a copy of the old tables and interfaces files from the
+Gibralter system to be converted and place them in the "convert"
+subfolder.
+
+4.  "cd" to that folder and run: ./lfw_fix_v4.sh
+
+You will see something like:
+
+patching file tables
+Hunk #1 succeeded at 1 with fuzz 2.
+Hunk #2 succeeded at 67 (offset -2 lines).
+Hunk #3 succeeded at 184 (offset 1 line).
+Hunk #4 succeeded at 193 (offset -2 lines).
+You may need to edit your 'generated' rules for *_PO or *_PI.
+
+5.  Check the newly patched tables file for a section like this:
+
+case "$TWO_NIC_FIREWALL" in 0|'');; *)
+  OUTSIDE_NIC='eth0'
+  INSIDE_NIC='eth1'
+
+  O_NIC="-i $OUTSIDE_NIC"
+  I_NIC="-i $INSIDE_NIC"
+
+  PHYS_DEV='-m physdev --physdev'
+
+  O_NIC_PO="${PHYS_DEV}-out $OUTSIDE_NIC"
+  O_NIC_PI="${PHYS_DEV}-in $OUTSIDE_NIC"
+  I_NIC_PO="${PHYS_DEV}-out $INSIDE_NIC"
+  I_NIC_PI="${PHYS_DEV}-in $INSIDE_NIC"
+esac
+
+And some lines lines containing "_NIC_P".
+
+If these are present and the patching did not give any "reject"
+errors, then the patch probably went okay.
+
+Copy tables to ./system/usr/local/sbin/.
+
+6.  Copy ./splash/splash_640x480_stable.png to
+./system/syslinux/splash.png
+
+7.  Edit ./system/usr/local/sbin/gnarwall_setup.sh to suit
+your system.
+
+8.  Edit ./system/etc/network/interfaces.v4 to suit your system
+and rename as ./system/etc/network/interfaces
+
+9.  Prepare the USB stick using the ./disk/write_usb.sh script.
+
+You will want to first place the "binary.img" in your "current"
+folder, as that is the default location the script expects.  The
+"current" folder is simply the folder name returned by "pwd".  
+For example, if you run ./write_usb.sh from within the ./disk/ 
+folder, then first put binary.img in that same folder.
+
+You will want to know ahead of time what device the USB stick
+is assigned by the kernel.  (I.e. /dev/sdf)
+
+If you are missing utilities, the script will tell you.
+
+These are the utilities it will look for: parted dd mkfs.ext3
+sudo awk sed mount umount.
+
+10.  Mount USB partitions.
+
+You can then mount the two partitions it will make and copy some
+files to it, or you can do that later on the live system.
+
+If you prefer to do it now on your workstation system...
+
+Create some mount points, and mount the partitions:
+
+Here we are doing this on the live system, but it would work
+the same (with a different device filename) on your workstation:
+
+# mkdir -p /mnt/sda1
+# mkdir -p /mnt/sda2
+# mount /dev/sda1 /mnt/sda1
+# mount /dev/sda2 /mnt/sda2
+
+# cp system/syslinux/*  /mnt/sda1/syslinux/
+# mkdir -p /mnt/sda2/usr/local/sbin/
+# cp ./system/usr/local/sbin/* /mnt/sda2/usr/local/sbin/
+# mkdir -p /mnt/sda2/etc/network/if-pre-up.d/
+# cp ./system/etc/network/interfaces /mnt/sda2/etc/network/
+# cp ./system/etc/network/if-pre-up.d/iptables \
+    /mnt/sda2/etc/network/if-pre-up.d/
+# cp ./system/etc/rc.local /mnt/sda2/etc/
+
+You will also need to patch some files in the "syslinux" folder:
+
+# cd /mnt/sda1/syslinux/ 
+# patch -l -p0 < syslinux.diff
+
+11.  You are now ready to unmount your USB stick and try it out:
+
+# cd ~
+# sync
+# umount /mnt/sda1
+# umount /mnt/sda2
+
+12.  When you boot to the USB stick you will need to change the
+root password before doing anything else.  Use this command as root:
+
+# passwd
+
+You will either log in as root with no password, or if that does not
+work, then log in as:
+
+    username: user
+    password: live
+
+    Change the root password with "sudo passwd"
+
+    If there was a "user" account, it will be removed later.
+
+13.  Reboot the system.
+
+14.  Confirm that Gnarwall is configured.
+
+The Gnarwall configuration should run since you have copied
+the rc.local file to the second partition on the USB stick
+and Debian Live should look for that partition and use it to
+configure Gnarwall.
+
+You can confirm that the live account has been removed with:
+
+# grep user /etc/passwd
+
+If this has no output, then the account has been removed.
+
+Otherwise, you will need to remove it manually with:
+
+# deluser user
+
+Also, you should see your chosen hostname appear at the shell
+prompt, etc., as a sign that Gnarwall has been configured.
+
+If not, you can run the configuration script manually:
+
+/usr/local/sbin/gnarwall_setup.sh
+
+If this script is not found, then the second partition may not
+have been mounted properly and loaded to the filesystem at 
+boot time.
+
+You can do this manually:
+
+# mkdir -p /mnt/sda2
+# mount /dev/sda2 /mnt/sda2
+# /mnt/sda2/usr/local/sbin/gnarwall_setup.sh
+
+To save your settings, you can run:
+
+# /sbin/live-snapshot -f
+
+And you can then unmount this partition with:
+
+# cd ~
+# sync
+# umount /mnt/sda2
+
+Again, you should only need to do this if there was a problem 
+finding /usr/local/sbin/gnarwall_setup.sh
+
+15.  For those who prefer to have a more familiar "save-config"
+command to use, we have included the following script:
+
+#!/bin/sh
+
+/sbin/live-snapshot -f
+
+Which is stored in the file: /usr/local/sbin/save-config
+
+(All changes should be saved automatically to USB stick upon 
+reboot anyway, as that is how we have configured Gnarwall.)
+
+16.  Testing
+
+If all of this went okay, you you should now have a firewall 
+functioning as the old Gibralter firewall did, but you will also 
+receive some logcheck messages to the email address configured 
+in the Gnarwall configuration script.  Of course, you will want 
+to test, test, test...
+
+17.  Resetting
+
+If you want to reconfigure Gnarwall, you will need to "reset":
+
+# /usr/local/sbin/gnarwall_reset.sh
+
+This script has been designed to remove all of the changes made
+by the Gnarwall setup script.
+
+Once you have edited your setup file, run it:
+
+# /usr/local/sbin/gnarwall_setup.sh
+
+18.  SSH
+
+By default, SSH access is enabled for the root user.  This may not be
+what you want.  You can reconfigure this in /etc/ssh/sshd_config and
+/etc/init.d/ssh, and use the normal Debian system for startup scripts.
+For example, you may want to restrict logins only to non-root users,
+or require the use of keys instead of allowing passwords.  At a minimum,
+you might want to restrict SSH logins to only the root user with:
+
+AllowUsers root
+
+...Placed on a new line somewhere in /etc/ssh/sshd_config.  You can
+restart sshd after configuration changes with:
+
+# /etc/init.d/ssh restart
+
+20.  Hosts file
+
+You will want to edit your /etc/hosts file to look something like:
+
+127.0.0.1 localhost
+127.0.1.1 firewall.dept.example.com firewall
+
+# The following lines are desirable for IPv6 capable hosts
+::1     ip6-localhost ip6-loopback
+fe00::0 ip6-localnet
+ff00::0 ip6-mcastprefix
+ff02::1 ip6-allnodes
+ff02::2 ip6-allrouters
+ff02::3 ip6-allhosts
+
+If you don't add the line starting with "127.0.1.1", then mail and ntp
+are not likely to work properly.  After the edit, you want to restart
+ntp and postfix, at a minimum.
+
+20.  Network time
+
+As you will see in the gnarwall_setup.sh file, there is a configuration
+parameter for a network time server.  The system time is synced to this
+server on system boot.  By default, Gnarwall also runs a local time
+server (ntp).  Some ntp settings are configured by Gnarwall's setup
+script.
+
+21.  Mail
+
+Gnarwall runs a mail server so that logcheck messages can be sent to
+a systems administrator.  The mail server package used is Postfix.
+Some configuration of Postfix is done by Gnarwall's setup script.
+
+22.  Logcheck
+
+Logcheck is installed by default on a Gnarwall system.  This is to
+alert you of various occurrances of interest in the log files.  The
+Gnarwall configuration file does some tweaking of the Logcheck
+configuration in order to minimize excessive mailings.
+
+23.  SNMP
+
+We have not automated any snmpd.conf tweaks.  You may want to 
+edit this file by hand: /etc/snmp/snmpd.conf
+
+We have not automated logcheck tweaks for snmpd.  You may want to
+edit this file by hand: /etc/logcheck/ignore.d.server/snmpd
