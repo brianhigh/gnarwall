@@ -5,8 +5,11 @@
 # Copy usb-hdd image to USB device and fill rest of space with ext3 partition.
 
 # Set the defaults
-DEV=/dev/sdb
+DEV=/dev/sdf
 IMG=binary.img
+
+# Set the PATH
+PATH=/sbin:$PATH
 
 # Check for needed utilities
 for i in parted dd mkfs.ext3 sudo awk sed mount umount; do \
@@ -35,6 +38,7 @@ fi
 # Set some command abbreviations
 PTD_PRN="parted ${DEV} --script print"
 PTD_MKP="parted ${DEV} --script -- mkpart primary"
+PTD_SET="parted ${DEV} --script set"
 
 # Check to make sure we can wipe this disk
 sudo $PTD_PRN
@@ -54,7 +58,7 @@ unmount_all() {
 unmount_all "$DEV" || exit 1
 
 # Copy the usb image to usb device
-sudo dd if="$IMG" of="${DEV}" bs=1M || or exit 1
+sudo dd if="$IMG" of="${DEV}" bs=1M || exit 1
 
 # Calculate the start position of new partition in MB.
 END=`sudo $PTD_PRN | awk '/^[ ]*1/ { print $3 }' | sed 's/MB//g'`
@@ -65,6 +69,9 @@ END=-1
 
 # Create the new partition
 sudo $PTD_MKP $START $END || exit 1
+
+# Set the bootable flag for partition 1
+sudo $PTD_SET 1 boot on || exit 1
 
 # Allow some time for partitions to automount, if system is set to do that
 sleep 5
