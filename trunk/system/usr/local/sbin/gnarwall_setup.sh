@@ -1,17 +1,17 @@
-#!/bin/sh
+#!/bin/bash
 #
 # gnarwall-setup.sh
 
 MY_HOSTNAME=firewall
 MY_DOMAINNAME=mydept.example.com
 MY_TIMEZONE='America/Los_Angeles'
-MY_LOCALE='LANG=en_US.UTF-8'
+MY_LOCALE='en_US.UTF-8'
 MY_EMAIL='admin@example.com'
 MY_TIMESERVER=time.example.com
 MY_NAMESERVER1=192.168.0.221
 MY_NAMESERVER2=192.168.0.222
 MY_DNSSEARCH="$MY_DOMAINNAME example.com"
-MY_DISABLE_IPV6=1         # 1=True (to disable ipv6) or 0=False (don't)
+MY_DISABLE_IPV6=0         # 1=True (to disable ipv6) or 0=False (don't)
 MY_BELL='none'            # Set to 'none', 'visible', or '' for audible
 
 MY_GNARWALL=/etc/gnarwall
@@ -35,7 +35,7 @@ rdate -s $MY_TIMESERVER
 # Create an /etc/ntp.conf if one does not already exist
 ENC=/etc/ntp.conf
 
-([ -s $ENC ] && grep -q $MY_TIMESERVER) || cat > $ENC <<EOF
+([ -s $ENC ] && grep -q $MY_TIMESERVER $ENC) || cat > $ENC <<EOF
 disable stats
 driftfile /var/lib/ntp/drift
 broadcastdelay  0.008
@@ -74,9 +74,26 @@ ff02::2 ip6-allrouters
 ff02::3 ip6-allhosts
 EOF
 
+# Set locale environmental variables
+export LANGUAGE="$MY_LOCALE"
+export LANG="$MY_LOCALE"
+export LC_ALL="$MY_LOCALE"
+
 # Create /etc/default/locale if it does not already contain my locale 
 EDL=/etc/default/locale
-([ -s $EDL ] && grep -q $MY_LOCALE $EDL) || echo $MY_LOCALE > $EDL
+([ -s $EDL ] && grep -q "^LANG=$LANG" $EDL) || echo LANG=$LANG > $EDL
+
+# Create /etc/locale.gen if it does not already contain my locale 
+ELG=/etc/locale.gen
+[ -s $ELG ] && grep -q "^$LANG" $ELG
+if [ $? != 0 ]; then \
+   /usr/bin/dpkg-query -W -f='${Status} ${Version}\n' locales > /dev/null
+   if [ $? = 0 ]; then \
+      rm -f $ELG
+      /usr/sbin/locale-gen "$LANG"
+      /usr/sbin/dpkg-reconfigure -u locales
+   fi
+fi
 
 # Set bell-style in /etc/initrc
 EIR=/etc/inputrc
@@ -97,23 +114,11 @@ fi
 
 # Modify logcheck ignore rules for ntpd to ignore "time sync status change"
 # See:  http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=498992
-# This is fixed in logcheck version 1:4.2.6+dfsg-1 (26 Dec 2009).
-BCM=/bin/chmod
+# This is fixed in logcheck version 1:4.2.6+dfsg-1 on Sat, 26 Dec 2009
 LCN=/etc/logcheck/ignore.d.server/ntp
-LCN1='kernel time sync (disabled|enabled)'
-LCN2='kernel time sync (enabled|status( change)?)'
-([ -w $LCN ] && grep -qF "$LCN1" $LCN) && sed -i "s/$LCN1/$LCN2/" $LCN
-([ -w $LCN ] && [ -x $BCM ]) && $BCM 640 $LCN
-
-# Also, ignore rsyslogd restarts.  Fixed in rsyslog 3.20.5-1 (08 Apr 2009).
-# See:  http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=522164
-BCM=/bin/chmod
-LCR=/etc/logcheck/ignore.d.server/rsyslog
-[ -s $LCR ] || cat > $LCR <<EOF
-^\w{3} [ :0-9]{11} [._[:alnum:]-]+ kernel:( \[[[:digit:]]+\.[[:digit:]]+\])? imklog [0-9.]+, log source = /proc/kmsg started.$
-^\w{3} [ :0-9]{11} [._[:alnum:]-]+ rsyslogd: \[origin software="rsyslogd" swVersion="[0-9.]+" x-pid="[0-9]+" x-info="http://www.rsyslog.com"\] restart$
-EOF
-([ -w $LCR ] && [ -x $BCM ]) && $BCM 640 $LCR
+LCR1='kernel time sync (disabled|enabled)'
+LCR2='kernel time sync (enabled|status( change)?)'
+([ -s $LCN ] && grep -qF "$LCR1" $LCN) && sed -i "s/$LCR1/$LCR2/" $LCN
 
 # Configure adminstrative email address for logwatch, postmaster, and root.
 LCC=/etc/logcheck/logcheck.conf
@@ -123,22 +128,39 @@ UBN=/usr/bin/newaliases
 sed -i "s/^\(postmaster\|logcheck\|root\):.*$/\1:\t$MY_EMAIL/" $EA
 [ -x $UBN ] && $UBN
 
+# Set defaults for snmpd to log only up to info level
+EDS=/etc/default/snmpd
+cat > $EDS <<EOF
+export MIBS=
+SNMPDRUN=yes
+SNMPDOPTS='-LS6d -Lf /dev/null -u snmp -g snmp -I -smux -p /var/run/snmpd.pid'
+TRAPDRUN=no
+TRAPDOPTS='-LS6d -p /var/run/snmptrapd.pid'
+SNMPDCOMPAT=yes
+EOF
+
+# Set default for rcS to run only one script at a time
+EDR=/etc/default/rcS
+[ -s $EDR ] && grep -q "^CONCURRENCY=" $EDR
+if [ $? != 0 ]; then \
+   echo 'CONCURRENCY=none' >> $EDR
+else
+   grep -q "^CONCURRENCY=none" $EDR
+   if [ $? != 0 ]; then \
+      sed -i "s/^\(CONCURRENCY\)=.*$/\1=none/" $EDR
+   fi
+fi
+
 # Disable IPv6
 # See: http://www.debian-administration.org/article/409/
-EML=/etc/modprobe.d/00local.conf
-PI6=/proc/sys/net/ipv6
-ANP='alias net-pf-10 off'
-AIO='alias ipv6 off'
-if [ "$MY_DISABLE_IPV6" == "1" ]; then \
-   if [ -e $EML ]; then \
-      grep -q "$ANP" $EML || echo "$ANP" >> $EML
-      grep -q "$AIO" $EML || echo "$AIO" >> $EML
-   else \
-      echo "$ANP" >> $EML
-      echo "$AIO" >> $EML
-   fi
-   [ -d $PI6 ] && echo "[*] Reboot to disable IPv6!"
-fi
+DV6=/etc/network/if-pre-up.d/disable_ipv6
+BCM=/bin/chmod
+[ "$MY_DISABLE_IPV6" == "1" ] && ([ -s $DV6 ] || cat > $DV6 <<EOF
+#!/bin/sh
+
+/sbin/sysctl -w net.ipv6.conf.all.disable_ipv6=1
+EOF
+([ -w $DV6 ] && [ -x $BCM ]) && $BCM 750 $DV6)
 
 # Leave a trace that this script has run at least once to completion
 mkdir -p $MY_GNARWALL

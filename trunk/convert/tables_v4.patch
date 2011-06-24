@@ -1,9 +1,13 @@
 *** tables.old	2010-10-25 15:07:26.000000000 -0700
 --- tables	2010-10-25 15:13:15.000000000 -0700
 ***************
-*** 1,3 ****
+*** 1,4 ****
+! : # BE SURE THIS IS STILL THE FIRST LINE AFTER YOU PASTE INTO THE TABLES FILE
+  #
+  PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/bin/X11 #
+  #
 --- 1,4 ----
-+ #!/bin/bash
+! #!/bin/bash
   #
   PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/bin/X11 #
   #
