@@ -15,7 +15,7 @@ Download the latest [http://code.google.com/p/gnarwall/downloads/list GnarWall s
 You can extract them on a Linux system with:
 
 {{{
-$ tar xvzf gnarwall.tgz
+$ tar xvzf gnarwall_*.tgz
 }}}
 
 
@@ -30,20 +30,21 @@ Email Address:  you@example.com
 
 [ Standard options ]
 --binary-images:    usb-hdd
---distribution:     lenny
+--distribution:     squeeze
 --packages-lists:   minimal
---packages:         dialog apt debconf-english parted postfix mailutils less snmp
-                    snmpd openssh-client openssh-server ntp ebtables bridge-utils
-                    logwatch iptraf iputils-ping logcheck netbase update-inetd tcpd 
-                    dhcp3-client rsyslog rsync patch rdate genext2fs vim-tiny nano
+--packages:         dialog apt debconf-english parted postfix mailutils 
+                    less snmp snmpd openssh-client openssh-server ntp 
+                    ebtables bridge-utils logwatch iputils-ping logcheck 
+                    netbase update-inetd tcpd dhcp3-client rsyslog rsync 
+                    patch rdate genext2fs vim-tiny nano locales
 
 [ Advanced chroot options ]
 --linux-flavours:   686
 
 [ Advanced binary options ]
 --binary-indices:   false
---bootappend-live:  persistent noautologin toram ip=frommedia quickreboot
-                    nofastboot nouser nosudo noprompt
+--bootappend-live:  persistent noautologin toram ip=frommedia 
+                    quickreboot nofast boot nouser nosudo noprompt
 --memtest:          none
 }}}
 
@@ -114,8 +115,11 @@ All of steps in this section (Installing the Image and Formatting the Partition)
 # Copy usb-hdd image to USB device and fill rest of space with ext3 partition.
 
 # Set the defaults
-DEV=/dev/sdb
+DEV=/dev/sdf
 IMG=binary.img
+
+# Set the PATH
+PATH=/sbin:$PATH
 
 # Check for needed utilities
 for i in parted dd mkfs.ext3 sudo awk sed mount umount; do \
@@ -144,6 +148,7 @@ fi
 # Set some command abbreviations
 PTD_PRN="parted ${DEV} --script print"
 PTD_MKP="parted ${DEV} --script -- mkpart primary"
+PTD_SET="parted ${DEV} --script set"
 
 # Check to make sure we can wipe this disk
 sudo $PTD_PRN
@@ -163,7 +168,7 @@ unmount_all() {
 unmount_all "$DEV" || exit 1
 
 # Copy the usb image to usb device
-sudo dd if="$IMG" of="${DEV}" bs=1M || or exit 1
+sudo dd if="$IMG" of="${DEV}" bs=1M || exit 1
 
 # Calculate the start position of new partition in MB.
 END=`sudo $PTD_PRN | awk '/^[ ]*1/ { print $3 }' | sed 's/MB//g'`
@@ -174,6 +179,9 @@ END=-1
 
 # Create the new partition
 sudo $PTD_MKP $START $END || exit 1
+
+# Set the bootable flag for partition 1
+sudo $PTD_SET 1 boot on || exit 1
 
 # Allow some time for partitions to automount, if system is set to do that
 sleep 5
@@ -201,11 +209,13 @@ Mount the first partition:
 # cd /mnt/sdb1/syslinux
 }}}
 
-In that folder, you can add a custom [http://gnarwall.googlecode.com/files/splash.zip splash image] (and edit stdmenu.cfg for this image in the "menu background" setting if the new image has a different filename than the default splash.png).
+In that folder, you can add a custom [http://gnarwall.googlecode.com/files/gnarwall_squeeze_splash.zip splash image] (and edit stdmenu.cfg for this image in the "menu background" setting if the new image has a different filename than the default splash.png).
 
 You may also want to modify your boot parameters in the live.cfg file.
 
 And you will probably want to set a countdown timer for syslinux so that it can boot without requiring user input.  If you edit syslinux.cfg and change the timeout setting to 100, you will get a 10 second countdown.
+
+(More suggestions are mentioned in the doc/INSTALL file included with the main gnarwall script archive gnarwall_*.tgz.  The INSTALL file also mentions how patch syslinux files to automates these changes.)
 
 You can also place your other system files on the USB stick's persistent partition:
 
@@ -298,9 +308,13 @@ tables_v4.patch:
 *** tables.old	2010-10-25 15:07:26.000000000 -0700
 --- tables	2010-10-25 15:13:15.000000000 -0700
 ***************
-*** 1,3 ****
+*** 1,4 ****
+! : # BE SURE THIS IS STILL THE FIRST LINE AFTER YOU PASTE INTO THE TABLES FILE
+  #
+  PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/bin/X11 #
+  #
 --- 1,4 ----
-+ #!/bin/bash
+! #!/bin/bash
   #
   PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/bin/X11 #
   #
@@ -407,7 +421,7 @@ iface br0 inet static
 # this is the last line of /etc/network/interfaces
 }}}
 
-(That file can be found in the GnarWall package as interfaces.v4.)
+(That file can be found in the GnarWall package as interfaces.v4.  You will need to edit it manually.)
 
 And this iptables start script could be saved as: /etc/network/if-pre-up.d/iptables
 
@@ -459,17 +473,21 @@ etc/ntp.conf
 You can also use a configuration script, much like gnarwall_setup.sh below, to make these common etc/ files.  Be sure to set the first group of configuration variables.  (TIP: Run this script from within the _live_ system.)
 
 {{{
-#!/bin/sh
+#!/bin/bash
 #
-# gnarwall_setup.sh
+# gnarwall-setup.sh
 
 MY_HOSTNAME=firewall
 MY_DOMAINNAME=mydept.example.com
 MY_TIMEZONE='America/Los_Angeles'
+MY_LOCALE='en_US.UTF-8'
+MY_EMAIL='admin@example.com'
 MY_TIMESERVER=time.example.com
 MY_NAMESERVER1=192.168.0.221
 MY_NAMESERVER2=192.168.0.222
 MY_DNSSEARCH="$MY_DOMAINNAME example.com"
+MY_DISABLE_IPV6=0         # 1=True (to disable ipv6) or 0=False (don't)
+MY_BELL='none'            # Set to 'none', 'visible', or '' for audible
 
 MY_GNARWALL=/etc/gnarwall
 MY_CONFIGURED=$MY_GNARWALL/configured
@@ -489,7 +507,7 @@ rdate -s $MY_TIMESERVER
 # Skip the rest of this script if the system has already been configured
 [ -e $MY_CONFIGURED ] && exit 0
 
-# Create an /etc/ntp.conf if it does not mention MY_TIMESERVER
+# Create an /etc/ntp.conf if one does not already exist
 ENC=/etc/ntp.conf
 
 ([ -s $ENC ] && grep -q $MY_TIMESERVER $ENC) || cat > $ENC <<EOF
@@ -506,7 +524,7 @@ PKG=tzdata
 echo "$MY_TIMEZONE" > $ETZ
 $UBR -f noninteractive  $PKG 2>/dev/null
 
-# Set mailname and hostname if they do not contain my FQDN
+# Set mailname and hostname if they have not been already configured
 FQDN=${MY_HOSTNAME}.${MY_DOMAINNAME}
 EMN=/etc/mailname
 EHN=/etc/hostname
@@ -530,6 +548,94 @@ ff02::1 ip6-allnodes
 ff02::2 ip6-allrouters
 ff02::3 ip6-allhosts
 EOF
+
+# Set locale environmental variables
+export LANGUAGE="$MY_LOCALE"
+export LANG="$MY_LOCALE"
+export LC_ALL="$MY_LOCALE"
+
+# Create /etc/default/locale if it does not already contain my locale 
+EDL=/etc/default/locale
+([ -s $EDL ] && grep -q "^LANG=$LANG" $EDL) || echo LANG=$LANG > $EDL
+
+# Create /etc/locale.gen if it does not already contain my locale 
+ELG=/etc/locale.gen
+[ -s $ELG ] && grep -q "^$LANG" $ELG
+if [ $? != 0 ]; then \
+   /usr/bin/dpkg-query -W -f='${Status} ${Version}\n' locales > /dev/null
+   if [ $? = 0 ]; then \
+      rm -f $ELG
+      /usr/sbin/locale-gen "$LANG"
+      /usr/sbin/dpkg-reconfigure -u locales
+   fi
+fi
+
+# Set bell-style in /etc/initrc
+EIR=/etc/inputrc
+SBS='set bell-style'
+
+if [ -w $EIR ]; then \
+   if [ -z "$MY_BELL" ]; then \
+      # Comment out all "set bell style" lines to enable default bell
+      sed -i "s/^$SBS/# $SBS/g" $EIR
+   else \
+      # Remove all "set bell style" lines and append new one
+      sed -i -n "/$SBS/!p" $EIR
+      echo "$SBS $MY_BELL" >> $EIR
+   fi
+else
+   echo "Can't write to $EIR!  Can't change bell-style!"
+fi
+
+# Modify logcheck ignore rules for ntpd to ignore "time sync status change"
+# See:  http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=498992
+# This is fixed in logcheck version 1:4.2.6+dfsg-1 on Sat, 26 Dec 2009
+LCN=/etc/logcheck/ignore.d.server/ntp
+LCR1='kernel time sync (disabled|enabled)'
+LCR2='kernel time sync (enabled|status( change)?)'
+([ -s $LCN ] && grep -qF "$LCR1" $LCN) && sed -i "s/$LCR1/$LCR2/" $LCN
+
+# Configure adminstrative email address for logwatch, postmaster, and root.
+LCC=/etc/logcheck/logcheck.conf
+EA=/etc/aliases
+UBN=/usr/bin/newaliases
+[ -s $LCC ] && sed -i "s/^\(SENDMAILTO\)=.*$/\1='$MY_EMAIL'/" $LCC
+sed -i "s/^\(postmaster\|logcheck\|root\):.*$/\1:\t$MY_EMAIL/" $EA
+[ -x $UBN ] && $UBN
+
+# Set defaults for snmpd to log only up to info level
+EDS=/etc/default/snmpd
+cat > $EDS <<EOF
+export MIBS=
+SNMPDRUN=yes
+SNMPDOPTS='-LS6d -Lf /dev/null -u snmp -g snmp -I -smux -p /var/run/snmpd.pid'
+TRAPDRUN=no
+TRAPDOPTS='-LS6d -p /var/run/snmptrapd.pid'
+SNMPDCOMPAT=yes
+EOF
+
+# Set default for rcS to run only one script at a time
+EDR=/etc/default/rcS
+[ -s $EDR ] && grep -q "^CONCURRENCY=" $EDR
+if [ $? != 0 ]; then \
+   echo 'CONCURRENCY=none' >> $EDR
+else
+   grep -q "^CONCURRENCY=none" $EDR
+   if [ $? != 0 ]; then \
+      sed -i "s/^\(CONCURRENCY\)=.*$/\1=none/" $EDR
+   fi
+fi
+
+# Disable IPv6
+# See: http://www.debian-administration.org/article/409/
+DV6=/etc/network/if-pre-up.d/disable_ipv6
+BCM=/bin/chmod
+[ "$MY_DISABLE_IPV6" == "1" ] && ([ -s $DV6 ] || cat > $DV6 <<EOF
+#!/bin/sh
+
+/sbin/sysctl -w net.ipv6.conf.all.disable_ipv6=1
+EOF
+([ -w $DV6 ] && [ -x $BCM ]) && $BCM 750 $DV6)
 
 # Leave a trace that this script has run at least once to completion
 mkdir -p $MY_GNARWALL
@@ -574,6 +680,7 @@ Where, /usr/local/sbin/gnarwall-reset.sh contains:
 CONFFILE=/etc/gnarwall/configured
 
 cd /etc && rm -f resolv.conf timezone hostname mailname hosts ntp.conf
+rm -f /etc/network/if-pre-up.d/disable_ipv6
 [ -e $CONFFILE ] && rm -f $CONFFILE
 }}}
 
@@ -599,7 +706,7 @@ If you prefer, you can simply do all of the customization manually after you boo
 /sbin/live-snapshot -f
 }}}
 
-But the very first thing you should do when you log into the live system is change the root password from the default empty password (no password)!
+But the very first thing you should do when you log into the live system is change the root password from the default empty password (no password)!  Then log in as root and remove the default live user account.
 
 You can also install and remove software with apt-get, aptitude, and dpkg -- from within the live system.  Just remember that package caches can fill your persistent partition fairly quickly, so run the associated clean command before restarting or snapshotting.  
 
@@ -617,7 +724,7 @@ This tutorial and the code listed within is licensed under the [http://www.gnu.o
 
 {{{
 GnarWall: Logical Firewall and Filtering Bridge
-Copyright © 2010 University of Washington
+Copyright © 2010,2011 University of Washington
 
 This file is part of GnarWall.
 
