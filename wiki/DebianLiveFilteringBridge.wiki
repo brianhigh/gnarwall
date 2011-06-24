@@ -215,7 +215,7 @@ You may also want to modify your boot parameters in the live.cfg file.
 
 And you will probably want to set a countdown timer for syslinux so that it can boot without requiring user input.  If you edit syslinux.cfg and change the timeout setting to 100, you will get a 10 second countdown.
 
-Note: More suggestions are mentioned in the doc/INSTALL file included with the main gnarwall script archive (gnarwall_*.tgz).  The INSTALL file also mentions how patch syslinux files to automates these changes.  It also includes a complete set-by-step installation guide for using all of the scripts and patches mentioned in this tutorial.
+Note: More suggestions are mentioned in the doc/INSTALL file included with the main gnarwall script archive (gnarwall_`*`.tgz).  The INSTALL file also mentions how patch syslinux files to automates these changes.  It also includes a complete set-by-step installation guide for using all of the scripts and patches mentioned in this tutorial.
 
 You can also place your other system files on the USB stick's persistent partition:
 
