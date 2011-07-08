@@ -5,8 +5,8 @@
 # Copy usb-hdd image to USB device and fill rest of space with ext3 partition.
 
 # Set the defaults
-DEV=/dev/sdf
-IMG=binary.img
+device=/dev/sdf
+image=binary.img
 
 # Set the PATH
 PATH=/sbin:$PATH
@@ -18,30 +18,30 @@ for i in parted dd mkfs.ext3 sudo awk sed mount umount; do \
 done
 
 # Prompt for device
-echo -n "Enter device name to wipe: ($DEV) "
-read NEWDEV
-[ -n "$NEWDEV" ] && DEV="$NEWDEV"
-if [ ! -b "$DEV" ]; then \
-   echo "$DEV is not a valid block device, aborting..."
+echo -n "Enter device name to wipe: ($device) "
+read new_device
+[ -n "$new_device" ] && device="$new_device"
+if [ ! -b "$device" ]; then \
+   echo "$device is not a valid block device, aborting..."
    exit 1
 fi 
 
 # Prompt for image file
-echo -n "Enter filename of USB image: ($IMG) "
-read NEWIMG
-[ -n "$NEWIMG" ] && IMG="$NEWIMG"
-if [ ! -r "$IMG" ]; then \
-   echo "Can't read $IMG, aborting..."
+echo -n "Enter filename of USB image: ($image) "
+read new_image
+[ -n "$new_image" ] && image="$new_image"
+if [ ! -r "$image" ]; then \
+   echo "Can't read $image, aborting..."
    exit 1
 fi
 
 # Set some command abbreviations
-PTD_PRN="parted ${DEV} --script print"
-PTD_MKP="parted ${DEV} --script -- mkpart primary"
-PTD_SET="parted ${DEV} --script set"
+parted_print="parted $device --script print"
+parted_mkpart="parted $device --script -- mkpart primary"
+parted_set="parted $device --script set"
 
 # Check to make sure we can wipe this disk
-sudo $PTD_PRN
+sudo $parted_print
 echo -n "Are you sure you want to wipe this disk? (y/n) "
 read ANS
 [ "$ANS" != "y" ] && exit 0
@@ -55,30 +55,30 @@ unmount_all() {
 }
 
 # Unmount all partitions of usb device if any are already mounted
-unmount_all "$DEV" || exit 1
+unmount_all "$device" || exit 1
 
 # Copy the usb image to usb device
-sudo dd if="$IMG" of="${DEV}" bs=1M || exit 1
+sudo dd if="$image" of="$device" bs=1M || exit 1
 
 # Calculate the start position of new partition in MB.
-END=`sudo $PTD_PRN | awk '/^[ ]*1/ { print $3 }' | sed 's/MB//g'`
-let START=END+1
+end=`sudo $parted_print | awk '/^[ ]*1/ { print $3 }' | sed 's/MB//g'`
+let start=end+1
 
 # Use -1 for end position to take all remaining space
-END=-1
+end=-1
 
 # Create the new partition
-sudo $PTD_MKP $START $END || exit 1
+sudo $parted_mkpart $start $end || exit 1
 
 # Set the bootable flag for partition 1
-sudo $PTD_SET 1 boot on || exit 1
+sudo $parted_set 1 boot on || exit 1
 
 # Allow some time for partitions to automount, if system is set to do that
 sleep 5
 
 # Unmount all partitions of usb device if any are already mounted
-unmount_all "$DEV" || exit 1
+unmount_all "$device" || exit 1
 
 # Format the new partition and print new table
-sudo mkfs.ext3 -L live-sn "${DEV}2" 
-sudo $PTD_PRN
+sudo mkfs.ext3 -L live-sn "${device}2" 
+sudo $parted_print
