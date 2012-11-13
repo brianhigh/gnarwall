@@ -69,15 +69,15 @@ You may also choose to save the other files for reference.  (The build system wi
 Alternatively, if you have a Debian-based system, you can also build the image yourself. Here is an example using [http://packages.debian.org/squeeze/live-build lb] version 2 in Debian Squeeze:
 
 {{{
-sudo apt-get update
-sudo apt-get install live-build cdebootstrap
-sudo lb config -d squeeze -p minimal --debian-installer live --linux-flavours 686 --packages \
+$ sudo apt-get update
+$ sudo apt-get install live-build cdebootstrap
+$ sudo lb config -d squeeze -p minimal --debian-installer live --linux-flavours 686 --packages \
 "dialog apt debconf-english less postfix mailutils snmp snmpd openssh-client openssh-server ntp ebtables bridge-utils logwatch iputils-ping logcheck netbase update-inetd tcpd dhcp3-client rsyslog rsync patch rdate genext2fs vim-tiny nano locales sudo" \
 --bootappend-live "persistent noautologin toram ip=frommedia quickreboot nofast boot noprompt" \
 --binary-image usb-hdd --security true --debian-installer false \
 --memtest none --source false --bootloader syslinux \
 --syslinux-timeout 5 --syslinux-menu true
-sudo lb build
+$ sudo lb build
 }}}
 
 We have placed a image made like this on [http://goo.gl/Iv0BO our Google Docs site].  You can use this if you have trouble making your own, or simply want to get started right away.
@@ -96,13 +96,13 @@ When you connect your USB device to a Linux system, you can check dmesg to see t
 Here is how you can write the image to the USB stick, assuming it is assigned to /dev/sdb:
 
 {{{
-dd if=binary.img of=/dev/sdb bs=1M
+$ sudo dd if=binary.img of=/dev/sdb bs=1M
 }}}
 
 You will likely want to add a persistent (snapshot) partition.  You can do this with fdisk and mkfs.ext3
 
 {{{
-# fdisk /dev/sdb
+$ sudo fdisk /dev/sdb
 n (enter)
 p (enter)
 2 (enter)
@@ -117,7 +117,7 @@ This is to make a (n) new (p) primary partition, number (2), starting at the nex
 ===Formatting the Partition===
 
 {{{
-# mkfs.ext3 -L live-sn /dev/sdb2
+sudo mkfs.ext3 -L live-sn /dev/sdb2
 }}}
 
 This adds the live-sn label which tells Debian Live to use it for persistent live-snapshots.
@@ -221,44 +221,42 @@ sudo $PTD_PRN
 
 You may also wish to add new files or edit the syslinux configuration files on the USB image.
 
-Here's how:
-
-Mount the first partition:
+You can add a custom [http://gnarwall.googlecode.com/files/gnarwall_squeeze_splash.zip splash image], for example, during the live image build. When building from the command line `lb` utility, we use this option:
 
 {{{
-# mkdir /mnt/sdb1
-# mount /dev/sdb1 /mnt/sdb1
-# cd /mnt/sdb1/syslinux
+sudo lb config [...] --syslinux-splash splash/splash_640x480_stable.png
 }}}
 
-In that folder, you can add a custom [http://gnarwall.googlecode.com/files/gnarwall_squeeze_splash.zip splash image] (and edit stdmenu.cfg for this image in the "menu background" setting if the new image has a different filename than the default splash.png).
+We offer this [http://gnarwall.googlecode.com/files/gnarwall_squeeze_splash.zip splash image] in a zip archive.
 
-You may also want to modify your boot parameters in the live.cfg file.
+And you will probably want to set a countdown timer for syslinux so that it can boot without requiring user input. We configure this using:
 
-And you will probably want to set a countdown timer for syslinux so that it can boot without requiring user input.  If you edit syslinux.cfg and change the timeout setting to 100, you will get a 10 second countdown.
+{{{
+sudo lb config [...] --syslinux-timeout 5
+}
 
-`Note: More suggestions are mentioned in the doc/INSTALL file included with the main gnarwall script archive (gnarwall_*.tgz).  The INSTALL file also mentions how to patch the syslinux files to automate these changes.  Further, it includes a complete step-by-step installation guide for using all of the scripts and patches mentioned in this tutorial.`
+`Note: More suggestions are mentioned in the doc/INSTALL file included with the main gnarwall script archive (gnarwall_*.tgz).  Further, it includes a complete step-by-step installation guide for using all of the scripts and patches mentioned in this tutorial.`
 
 You can also place your other system files on the USB stick's persistent partition:
 
 {{{
-# mkdir /mnt/sdb2
-# mount /dev/sdb2 /mnt/sdb2
-# cd /mnt/sdb2
+$ sudo mkdir /mnt/sdb2
+$ sudo mount /dev/sdb2 /mnt/sdb2
+$ sudo cd /mnt/sdb2
 }}}
 
 You can place your NDC LFW tables file in usr/local/sbin:
 
 {{{
-# mkdir -p usr/local/sbin
-# cp ~/tables usr/local/sbin
+$ sudo mkdir -p usr/local/sbin
+$ sudo cp ~/tables usr/local/sbin
 }}}
 
 You can place your NDC LFW interfaces file in etc/network:
 
 {{{
-# mkdir -p etc/network
-# cp ~/interfaces etc/network
+$ sudo mkdir -p etc/network
+$ sudo cp ~/interfaces etc/network
 }}}
 
 
@@ -692,8 +690,8 @@ exit 0
 To do a clean configuration reset, we run:
 
 {{{
-# /usr/local/sbin/gnarwall-reset.sh
-# /usr/local/sbin/gnarwall-setup.sh
+$ sudo /usr/local/sbin/gnarwall-reset.sh
+$ sudo /usr/local/sbin/gnarwall-setup.sh
 }}}
 
 Where, /usr/local/sbin/gnarwall-reset.sh contains:
@@ -727,14 +725,14 @@ rm -f "${conf_files[@]}" 2>/dev/null
 All of these configuration scripts are secured with:
 
 {{{
-# chown root /etc/rc.local /usr/local/sbin/*
-# chmod 0700 /etc/rc.local /usr/local/sbin/*
+$ sudo chown root /etc/rc.local /usr/local/sbin/*
+$ sudo chmod 0700 /etc/rc.local /usr/local/sbin/*
 }}}
 
 If you prefer, you can simply do all of the customization manually after you boot the USB stick.  Your changes will be saved to the persistent partition when you reboot.  Alternatively, you can also force changes to the persistent partition (without rebooting) with:
 
 {{{
-# live-snapshot -f
+$ sudo live-snapshot -f
 }}}
 
 ... which acts something like save-config in Gibraltar.  If you want, you can place a wrapper script for this command in /usr/local/sbin/save-config:
@@ -763,7 +761,7 @@ This tutorial and the code listed within is licensed under the [http://www.gnu.o
 
 {{{
 GnarWall: Logical Firewall and Filtering Bridge
-Copyright © 2010,2011 University of Washington
+Copyright © 2010-2012 University of Washington
 
 This file is part of GnarWall.
 
