@@ -23,7 +23,7 @@ $ tar xvzf gnarwall_*.tgz
 
 Go to: [http://live-build.debian.net/cgi-bin/live-build]
 
-Fill out the web form* as shown in this example configuration:
+Fill out the web form`*` as shown in this example configuration:
 
 {{{
 Email Address:  you@example.com
@@ -48,7 +48,7 @@ Email Address:  you@example.com
 --memtest:          none
 }}}
 
-(* = The options in the form change as the Debian Live project evolves so adapt accordingly.)
+(`*` = The options in the form change as the Debian Live project evolves so adapt accordingly.)
 
 You will want to use your own email address, of course.
 
