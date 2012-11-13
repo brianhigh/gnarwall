@@ -743,7 +743,7 @@ $ sudo live-snapshot -f
 /sbin/live-snapshot -f
 }}}
 
-But the very first thing you should do when you log into the live system is change the root password from the default empty password (no password)!  Then log in as root and remove the default live user account.
+But the very first thing you should do when you log into the live system (username=user, password=live) is change the root password from the default empty password (no password)!  If you do not want to keep the default `user` account on the system, then log in as root and remove the default live user account. Otherwise be sure and change that password as well.
 
 You can also install and remove software with apt-get, aptitude, and dpkg -- from within the live system.  Just remember that package caches can fill your persistent partition fairly quickly, so run the associated clean command before restarting or snapshotting.  
 
