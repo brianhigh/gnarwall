@@ -235,9 +235,9 @@ And you will probably want to set a countdown timer for syslinux so that it can 
 $ sudo lb config [...] --syslinux-timeout 5
 }}}
 
-`Note: More suggestions are mentioned in the doc/INSTALL file included with the main gnarwall script archive (gnarwall_*.tgz).  Further, it includes a complete step-by-step installation guide for using all of the scripts and patches mentioned in this tutorial.`
+`Note: More suggestions are mentioned in the doc/INSTALL file included with the main GnarWall script archive (gnarwall_*.tgz).  Further, it includes a complete step-by-step installation guide for using all of the scripts and patches mentioned in this tutorial.`
 
-You can also place your other system files on the USB stick's persistent partition. We extract the gnarwall script archive and copy to the mounted ext3 partition:
+You can also place your other system files on the USB stick's persistent partition. We extract the GnarWall script archive and copy to the mounted ext3 partition:
 
 {{{
 $ tar xvzf gnarwall_*.tgz
@@ -256,6 +256,8 @@ And, likewise, you can place your NDC LFW interfaces file in etc/network and cop
 {{{
 $ sudo cp -R etc sdb2/
 }}}
+
+If your files were generated from the NDC LFW website, you may need to modify them to work with GnarWall. This is covered next.
 
 
 ==Updating the NDC LFW Generated Scripts==
