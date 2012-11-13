@@ -71,12 +71,9 @@ Alternatively, if you have a Debian-based system, you can also build the image y
 {{{
 sudo apt-get update
 sudo apt-get install live-build cdebootstrap
-sudo lb config -d squeeze -p minimal --debian-installer live  \
---linux-flavours 686 --packages \
-"dialog apt debconf-english less postfix mailutils snmp snmpd openssh-client openssh-server ntp ebtables bridge-utils logwatch iputils-ping logcheck netbase \
-update-inetd tcpd dhcp3-client rsyslog rsync patch rdate genext2fs \
-vim-tiny nano locales sudo" --bootappend-live \
-"persistent noautologin toram ip=frommedia quickreboot nofast boot noprompt" \
+sudo lb config -d squeeze -p minimal --debian-installer live --linux-flavours 686 --packages \
+"dialog apt debconf-english less postfix mailutils snmp snmpd openssh-client openssh-server ntp ebtables bridge-utils logwatch iputils-ping logcheck netbase update-inetd tcpd dhcp3-client rsyslog rsync patch rdate genext2fs vim-tiny nano locales sudo" \
+--bootappend-live "persistent noautologin toram ip=frommedia quickreboot nofast boot noprompt" \
 --binary-image usb-hdd --security true --debian-installer false \
 --memtest none --source false --bootloader syslinux \
 --syslinux-timeout 5 --syslinux-menu true
