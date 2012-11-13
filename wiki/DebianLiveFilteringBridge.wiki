@@ -237,26 +237,24 @@ $ sudo lb config [...] --syslinux-timeout 5
 
 `Note: More suggestions are mentioned in the doc/INSTALL file included with the main gnarwall script archive (gnarwall_*.tgz).  Further, it includes a complete step-by-step installation guide for using all of the scripts and patches mentioned in this tutorial.`
 
-You can also place your other system files on the USB stick's persistent partition:
+You can also place your other system files on the USB stick's persistent partition. We extract the gnarwall script archive and copy to the mounted ext3 partition:
 
 {{{
-$ sudo mkdir /mnt/sdb2
-$ sudo mount /dev/sdb2 /mnt/sdb2
-$ sudo cd /mnt/sdb2
+$ tar xvzf gnarwall_*.tgz
+$ mkdir sdb2
+$ sudo mount /dev/sdb2 sdb2
 }}}
 
-You can place your NDC LFW tables file in usr/local/sbin:
+Now you can place your NDC LFW tables file in usr/local/sbin and copy the scripts:
 
 {{{
-$ sudo mkdir -p usr/local/sbin
-$ sudo cp ~/tables usr/local/sbin
+$ sudo cp -R usr sdb2/
 }}}
 
-You can place your NDC LFW interfaces file in etc/network:
+And, likewise, you can place your NDC LFW interfaces file in etc/network and copy to the ext3 partition:
 
 {{{
-$ sudo mkdir -p etc/network
-$ sudo cp ~/interfaces etc/network
+$ sudo cp -R etc sdb2/
 }}}
 
 
