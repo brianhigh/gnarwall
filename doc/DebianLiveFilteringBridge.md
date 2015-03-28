@@ -2,7 +2,7 @@
 
 Problem:  You want to run the [NDC LFW](https://staff.washington.edu/corey/fw/) scripts for your filtering bridge firewall, but you do not want to use [Gibraltar](http://www.gibraltar.at/).  Instead, you want something you can customize, run solely from your USB stick, and update when you want to.
 
-Solution:  [Debian Live](http://live.debian.net/) has a [web-based live build web application](http://live.debian.net/devel/live-build/) which can build your image in a few minutes, with many customization options.
+Solution:  [Live-Systems.org](http://cgi.build.live-systems.org/cgi-bin/live-build) has a [web-based live build web application](http://cgi.build.live-systems.org/cgi-bin/live-build) which can build your image in a few minutes, with many customization options.
 
 
 ## GnarWall Script Files
@@ -18,7 +18,7 @@ $ tar xvzf gnarwall_*.tgz
 
 ## Debian Live Disk Image
 
-Go to: http://live-build.debian.net/cgi-bin/live-build
+Go to: http://cgi.build.live-systems.org/cgi-bin/live-build
 
 Fill out the web form`*` as shown in this example configuration:
 
