@@ -63,7 +63,7 @@ You may also choose to save the other files for reference.  (The build system wi
 
 ### Alternate Method of Building the Image
 
-Alternatively, if you have a Debian "Jesse" system, you can also build the image yourself. Here is an example using [lb](https://packages.debian.org/jessie/live-build) version 2 in Debian Squeeze:
+Alternatively, if you have a Debian "Jesse" system, you can also build the image yourself. Here is an example using [lb](https://packages.debian.org/jessie/live-build) version 4.0.3-1:
 
 ```
 sudo apt-get install live-build debootstrap syslinux squashfs-tools genisoimage rsync
