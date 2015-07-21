@@ -63,19 +63,22 @@ You may also choose to save the other files for reference.  (The build system wi
 
 ### Alternate Method of Building the Image
 
-Alternatively, if you have a Debian-based system, you can also build the image yourself. Here is an example using [lb](https://packages.debian.org/jessie/live-build) version 2 in Debian Squeeze:
+Alternatively, if you have a Debian "Jesse" system, you can also build the image yourself. Here is an example using [lb](https://packages.debian.org/jessie/live-build) version 2 in Debian Squeeze:
 
 ```
-$ sudo apt-get update
-$ sudo apt-get install live-build cdebootstrap
-$ sudo lb config -d jesse -p minimal --debian-installer live --linux-flavours 686 --packages \
-"dialog apt debconf less postfix mailutils snmp snmpd openssh-client openssh-server ntp ebtables bridge-utils logwatch iputils-ping logcheck netbase update-inetd tcpd dhcpcd5 rsyslog rsync patch rdate genext2fs vim-tiny nano locales sudo" \
---bootappend-live "persistent noautologin toram ip=frommedia quickreboot nofast boot noprompt" \
---binary-image iso-hybrid --security true --debian-installer false \
---memtest none --source false --bootloader syslinux \
---syslinux-timeout 5 --syslinux-menu true
-$ sudo lb build
+sudo apt-get install live-build debootstrap syslinux squashfs-tools genisoimage rsync
+
+mkdir live-build
+cd live-build
+mkdir -p config/package-lists/
+
+echo "dialog apt debconf parted postfix mailutils sudo snmp snmpd openssh-client openssh-server ntp ebtables bridge-utils logwatch iputils-ping logcheck netbase update-inetd tcpd dhcpcd5 rsyslog rsync patch rdate genext2fs vim-tiny nano locales user-setup coreutils" > config/package-lists/minimal.list.chroot
+
+sudo lb config -a i386 -k 686 --debootstrap-options "--variant=minbase" --debian-installer live --binary-image iso-hybrid --security true --debian-installer false --memtest none --source false --bootloader syslinux
+
+sudo lb build
 ```
+Your image will be in the file: ./cache/contents.chroot/contents.jessie.i386
 
 We have placed a image made like this on [our Google Docs site](http://goo.gl/Iv0BO).  You can use this if you have trouble making your own, or simply want to get started right away.
 
