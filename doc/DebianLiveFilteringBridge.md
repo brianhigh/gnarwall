@@ -7,12 +7,12 @@ Solution:  [Live-Systems.org](http://cgi.build.live-systems.org/cgi-bin/live-bui
 
 ## GnarWall Script Files
 
-Download the latest [GnarWall scripts](http://code.google.com/p/gnarwall/downloads/list) we have shared for this project.
+Download the latest [GnarWall scripts](https://github.com/brianhigh/gnarwall/archive/master.zip) we have shared for this project.
 
 You can extract them on a Linux system with:
 
 ```
-$ tar xvzf gnarwall_*.tgz
+$ gunzip master.zip
 ```
 
 
@@ -26,13 +26,13 @@ Fill out the web form`*` as shown in this example configuration:
 Email Address:  you@example.com
 
 [ Standard options ]
---binary-images:    usb-hdd
---distribution:     squeeze
---packages-lists:   minimal
---packages:         dialog apt debconf-english parted postfix mailutils 
+--binary-images:    iso-hybrid
+--distribution:     jesse
+--packages-lists:   standard
+--packages:         dialog apt debconf parted postfix mailutils 
                     sudo snmp snmpd openssh-client openssh-server ntp 
                     ebtables bridge-utils logwatch iputils-ping logcheck 
-                    netbase update-inetd tcpd dhcp3-client rsyslog rsync 
+                    netbase update-inetd tcpd dhcpcd5 rsyslog rsync 
                     patch rdate genext2fs vim-tiny nano locales
 
 [ Advanced chroot options ]
@@ -54,7 +54,7 @@ You will want to use your own email address, of course.
 
 After a few minutes you will be able to download your image.
 
-The Live Build web application will show you a link to download your files.
+The Live Build web application will show you a link to download your files. You will get an email when they are ready.
 
 Download the files and check the MD5 sum of the image against the MD5 sum listed in the md5sum file.
 
@@ -63,15 +63,15 @@ You may also choose to save the other files for reference.  (The build system wi
 
 ### Alternate Method of Building the Image
 
-Alternatively, if you have a Debian-based system, you can also build the image yourself. Here is an example using [lb](http://packages.debian.org/squeeze/live-build) version 2 in Debian Squeeze:
+Alternatively, if you have a Debian-based system, you can also build the image yourself. Here is an example using [lb](https://packages.debian.org/jessie/live-build) version 2 in Debian Squeeze:
 
 ```
 $ sudo apt-get update
 $ sudo apt-get install live-build cdebootstrap
-$ sudo lb config -d squeeze -p minimal --debian-installer live --linux-flavours 686 --packages \
-"dialog apt debconf-english less postfix mailutils snmp snmpd openssh-client openssh-server ntp ebtables bridge-utils logwatch iputils-ping logcheck netbase update-inetd tcpd dhcp3-client rsyslog rsync patch rdate genext2fs vim-tiny nano locales sudo" \
+$ sudo lb config -d jesse -p minimal --debian-installer live --linux-flavours 686 --packages \
+"dialog apt debconf less postfix mailutils snmp snmpd openssh-client openssh-server ntp ebtables bridge-utils logwatch iputils-ping logcheck netbase update-inetd tcpd dhcpcd5 rsyslog rsync patch rdate genext2fs vim-tiny nano locales sudo" \
 --bootappend-live "persistent noautologin toram ip=frommedia quickreboot nofast boot noprompt" \
---binary-image usb-hdd --security true --debian-installer false \
+--binary-image iso-hybrid --security true --debian-installer false \
 --memtest none --source false --bootloader syslinux \
 --syslinux-timeout 5 --syslinux-menu true
 $ sudo lb build
