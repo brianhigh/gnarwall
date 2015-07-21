@@ -12,7 +12,7 @@ Download the latest [GnarWall scripts](https://github.com/brianhigh/gnarwall/arc
 You can extract them on a Linux system with:
 
 ```
-$ gunzip master.zip
+$ unzip master.zip
 ```
 
 
@@ -66,17 +66,17 @@ You may also choose to save the other files for reference.  (The build system wi
 Alternatively, if you have a Debian "Jesse" system, you can also build the image yourself. Here is an example using [lb](https://packages.debian.org/jessie/live-build) version 4.0.3-1:
 
 ```
-sudo apt-get install live-build debootstrap syslinux squashfs-tools genisoimage rsync
+$ sudo apt-get install live-build debootstrap syslinux squashfs-tools genisoimage rsync
 
-mkdir live-build
-cd live-build
-mkdir -p config/package-lists/
+$ mkdir live-build
+$ cd live-build
+$ mkdir -p config/package-lists/
 
-echo "dialog apt debconf parted postfix mailutils sudo snmp snmpd openssh-client openssh-server ntp ebtables bridge-utils logwatch iputils-ping logcheck netbase update-inetd tcpd dhcpcd5 rsyslog rsync patch rdate genext2fs vim-tiny nano locales user-setup coreutils" > config/package-lists/minimal.list.chroot
+$ echo "dialog apt debconf parted postfix mailutils sudo snmp snmpd openssh-client openssh-server ntp ebtables bridge-utils logwatch iputils-ping logcheck netbase update-inetd tcpd dhcpcd5 rsyslog rsync patch rdate genext2fs vim-tiny nano locales user-setup coreutils" > config/package-lists/minimal.list.chroot
 
-sudo lb config -a i386 -k 686 --debootstrap-options "--variant=minbase" --debian-installer live --binary-image iso-hybrid --security true --debian-installer false --memtest none --source false --bootloader syslinux
+$ sudo lb config -a i386 -k 686 --debootstrap-options "--variant=minbase" --debian-installer live --binary-image iso-hybrid --security true --debian-installer false --memtest none --source false --bootloader syslinux
 
-sudo lb build
+$ sudo lb build
 ```
 Your image will be in the file: ./cache/contents.chroot/contents.jessie.i386
 
