@@ -549,7 +549,7 @@ echo "$timezone" > $timezone_conf
 $reconfigure -f noninteractive  $timezone_package 2>/dev/null
 
 # Reconfigure resolvconf
-$reconfigure -f noninteractive  resolcvonf 2>/dev/null
+$reconfigure -f noninteractive resolvconf 2>/dev/null
 
 # Set mailname and hostname if they have not been already configured
 fqdn=${host}.${domain}

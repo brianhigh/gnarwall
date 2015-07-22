@@ -1,4 +1,4 @@
-HOW TO SETUP A "SQUEEZE" DEBIAN LIVE USB SYSTEM WITH GNARWALL
+HOW TO SETUP A "JESSIE" DEBIAN LIVE USB SYSTEM WITH GNARWALL
 
 Assuming you are going to be updating from a Gibraltar NDC LFW 
 Variation 4 system...
@@ -91,6 +91,7 @@ the same (with a different device filename) on your workstation:
 
 # cp -R system/usr /mnt/sda2/
 # cp -R system/etc /mnt/sda2/
+# cp system/persistence.conf /mnt/sda2/
 
 10.  You are now ready to unmount your USB stick and try it out:
 
@@ -136,7 +137,7 @@ If this has no output, then the account has been removed.
 
 Otherwise, you will need to remove it manually with:
 
-# deluser user
+# userdel -f -r user
 
 Also, you should see your chosen hostname appear at the shell
 prompt, etc., as a sign that Gnarwall has been configured.
@@ -155,10 +156,6 @@ You can do this manually:
 # mount /dev/sda2 /mnt/sda2
 # /mnt/sda2/usr/local/sbin/gnarwall_setup.sh
 
-To save your settings, you can run:
-
-# /sbin/live-snapshot -f
-
 And you can then unmount this partition with:
 
 # cd ~
@@ -168,19 +165,10 @@ And you can then unmount this partition with:
 Again, you should only need to do this if there was a problem 
 finding /usr/local/sbin/gnarwall_setup.sh
 
-14.  For those who prefer to have a more familiar "save-config"
-command to use, we have included the following script:
+All changes should be saved automatically to the USB stick upon 
+reboot, as that is how we have configured Gnarwall.
 
-#!/bin/sh
-
-/sbin/live-snapshot -f
-
-Which is stored in the file: /usr/local/sbin/save-config
-
-(All changes should be saved automatically to USB stick upon 
-reboot anyway, as that is how we have configured Gnarwall.)
-
-15.  Testing
+14.  Testing
 
 If all of this went okay, you you should now have a firewall 
 functioning as the old Gibralter firewall did, but you will also 
@@ -188,7 +176,7 @@ receive some logcheck messages to the email address configured
 in the Gnarwall configuration script.  Of course, you will want 
 to test, test, test...
 
-16.  Resetting
+15.  Resetting
 
 If you want to reconfigure Gnarwall, you will need to "reset":
 
@@ -201,7 +189,7 @@ Once you have edited your setup file, run it:
 
 # /usr/local/sbin/gnarwall_setup.sh
 
-17.  SSH
+16.  SSH
 
 By default, SSH access is enabled for the root user.  This may not be
 what you want.  You can reconfigure this in /etc/ssh/sshd_config and
@@ -217,7 +205,7 @@ restart sshd after configuration changes with:
 
 # /etc/init.d/ssh restart
 
-18.  Hosts file
+17.  Hosts file
 
 You will want to edit your /etc/hosts file to look something like:
 
@@ -236,7 +224,7 @@ If you don't add the line starting with "127.0.1.1", then mail and ntp
 are not likely to work properly.  After the edit, you want to restart
 ntp and postfix, at a minimum.
 
-19.  Network time
+18.  Network time
 
 As you will see in the gnarwall_setup.sh file, there is a configuration
 parameter for a network time server.  The system time is synced to this
@@ -244,20 +232,20 @@ server on system boot.  By default, Gnarwall also runs a local time
 server (ntp).  Some ntp settings are configured by Gnarwall's setup
 script.
 
-20.  Mail
+19.  Mail
 
 Gnarwall runs a mail server so that logcheck messages can be sent to
 a systems administrator.  The mail server package used is Postfix.
 Some configuration of Postfix is done by Gnarwall's setup script.
 
-21.  Logcheck
+20.  Logcheck
 
 Logcheck is installed by default on a Gnarwall system.  This is to
 alert you of various occurrances of interest in the log files.  The
 Gnarwall configuration file does some tweaking of the Logcheck
 configuration in order to minimize excessive mailings.
 
-22.  SNMP
+21.  SNMP
 
 We have not automated any snmpd.conf tweaks.  You may want to 
 edit this file by hand: /etc/snmp/snmpd.conf
