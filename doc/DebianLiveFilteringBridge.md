@@ -37,11 +37,13 @@ Email Address:  you@example.com
 
 [ Advanced chroot options ]
 --linux-flavours:   686
+--security:         true
 
 [ Advanced binary options ]
---binary-indices:   false
+--apt-indices:      false
 --bootappend-live:  noautologin toram ip=frommedia quickreboot nofast 
                     noprompt boot=live config quiet splash persistence
+--iso-application:  GnarWall
 --memtest:          none
 ```
 
@@ -74,7 +76,7 @@ $ mkdir -p config/package-lists/
 
 $ echo "dialog apt debconf parted postfix mailutils sudo snmp snmpd openssh-client openssh-server ntp ebtables bridge-utils logwatch iputils-ping logcheck netbase update-inetd tcpd dhcpcd5 rsyslog rsync patch rdate genext2fs vim-tiny nano locales user-setup coreutils" > config/package-lists/minimal.list.chroot
 
-$ sudo lb config -a i386 --debootstrap-options "--variant=minbase" --debian-installer live --binary-image iso-hybrid --security true --debian-installer false --memtest none --source false --bootloader syslinux --bootappend-live "noautologin toram ip=frommedia quickreboot nofast noprompt boot=live config quiet splash persistence"
+$ sudo lb config -a i386 --debootstrap-options "--variant=minbase" --debian-installer live --binary-image iso-hybrid --security true --apt-indices false --iso-application GnarWall --debian-installer false --memtest none --source false --bootloader syslinux --bootappend-live "noautologin toram ip=frommedia quickreboot nofast noprompt boot=live config quiet splash persistence"
 
 $ sudo lb build
 ```
