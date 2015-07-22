@@ -4,8 +4,7 @@ Assuming you are going to be updating from a Gibraltar NDC LFW
 Variation 4 system...
 
 1.  Get the Gnarwall files and place them in a suitable folder
-on your linux system.  (These archive files are gnarwall*.tgz
-and gnarwall_squeeze_splash.zip and possibly squeeze_usb_*.tgz.)
+on your linux system.
 
 Since you will be running sudo, root will need access to the
 installer files, so a network-mounted home folder may not work 
