@@ -6,6 +6,14 @@ Variation 4 system...
 1.  Get the Gnarwall files and place them in a suitable folder
 on your linux system.
 
+You can get these files from here:
+
+https://github.com/brianhigh/gnarwall/
+
+You can find directions on how to make the binary image here:
+
+https://github.com/brianhigh/gnarwall/blob/master/doc/DebianLiveFilteringBridge.md
+
 Since you will be running sudo, root will need access to the
 installer files, so a network-mounted home folder may not work 
 for this.  Use a folder on the local filesystem instead.
