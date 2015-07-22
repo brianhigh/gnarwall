@@ -76,7 +76,7 @@ $ mkdir -p config/package-lists/
 
 $ echo "dialog apt debconf parted postfix mailutils sudo snmp snmpd openssh-client openssh-server ntp ebtables bridge-utils logwatch iputils-ping logcheck netbase update-inetd tcpd dhcpcd5 rsyslog rsync patch rdate genext2fs vim-tiny nano locales user-setup coreutils" > config/package-lists/minimal.list.chroot
 
-$ sudo lb config -a i386 -k 486 --debootstrap-options "--variant=minbase" --debian-installer live --binary-image iso-hybrid --security true --apt-indices false --iso-application GnarWall --memtest none --source false --bootloader syslinux --bootappend-live "noautologin toram ip=frommedia quickreboot nofast noprompt boot=live config quiet splash persistence"
+$ sudo lb config -a i386 -k 486 -b iso-hybrid --bootstrap debootstrap --debootstrap-options "--variant=minbase" --security true --apt-indices false --iso-application GnarWall --memtest none --source false --bootloader syslinux --bootappend-live "noautologin toram ip=frommedia quickreboot nofast noprompt boot=live config quiet splash persistence"
 
 $ sudo lb build
 ```
@@ -476,7 +476,6 @@ exit 0
 
 We will update this page soon with a revised conversion script.  Until then, this version will work well enough for testing.  Of course, ideally, we will want to update the NDC LFW generator application, so no special conversion scripts will be needed, but that will have to wait a bit...
 
-
 ## Suggested Additional Files
 
 We have found it useful to place the following files in the persistent partition:
@@ -548,6 +547,9 @@ timezone_conf=/etc/timezone
 timezone_package=tzdata
 echo "$timezone" > $timezone_conf
 $reconfigure -f noninteractive  $timezone_package 2>/dev/null
+
+# Reconfigure resolvconf
+$reconfigure -f noninteractive  resolcvonf 2>/dev/null
 
 # Set mailname and hostname if they have not been already configured
 fqdn=${host}.${domain}
