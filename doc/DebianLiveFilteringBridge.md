@@ -29,11 +29,11 @@ Email Address:  you@example.com
 --binary-images:    iso-hybrid
 --distribution:     jesse
 --packages-lists:   standard
---packages:         dialog apt debconf parted postfix mailutils 
+--packages:         dialog apt debconf parted exim4 mailutils 
                     sudo snmp snmpd openssh-client openssh-server ntp 
                     ebtables bridge-utils logwatch iputils-ping logcheck 
                     netbase update-inetd tcpd dhcpcd5 rsyslog rsync 
-                    patch rdate genext2fs vim-tiny nano locales
+                    patch rdate genext2fs vim-tiny nano locales coreutils
 
 [ Advanced chroot options ]
 --linux-flavours:   686
@@ -74,11 +74,11 @@ $ mkdir -p config/package-lists/
 
 $ echo "dialog apt debconf parted postfix mailutils sudo snmp snmpd openssh-client openssh-server ntp ebtables bridge-utils logwatch iputils-ping logcheck netbase update-inetd tcpd dhcpcd5 rsyslog rsync patch rdate genext2fs vim-tiny nano locales user-setup coreutils" > config/package-lists/minimal.list.chroot
 
-$ sudo lb config -a i386 -k 686 --debootstrap-options "--variant=minbase" --debian-installer live --binary-image iso-hybrid --security true --debian-installer false --memtest none --source false --bootloader syslinux
+$ sudo lb config -a i386 -k 686 --debootstrap-options "--variant=minbase" --debian-installer live --binary-image iso-hybrid --security true --debian-installer false --memtest none --source false --bootloader syslinux --bootappend-live "noautologin toram ip=frommedia quickreboot nofast noprompt boot=live config quiet splash persistence"
 
 $ sudo lb build
 ```
-Your image will be in the file: ./cache/contents.chroot/contents.jessie.i386
+You should find your binary image file in the current working directory with the filename: live-image-i386.hybrid.iso
 
 We have placed a image made like this on [our Google Docs site](http://goo.gl/Iv0BO).  You can use this if you have trouble making your own, or simply want to get started right away.
 
