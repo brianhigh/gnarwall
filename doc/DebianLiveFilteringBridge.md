@@ -40,8 +40,8 @@ Email Address:  you@example.com
 
 [ Advanced binary options ]
 --binary-indices:   false
---bootappend-live:  persistent noautologin toram ip=frommedia 
-                    quickreboot nofast boot noprompt
+--bootappend-live:  noautologin toram ip=frommedia quickreboot nofast 
+                    noprompt boot=live config quiet splash persistence
 --memtest:          none
 ```
 
@@ -74,7 +74,7 @@ $ mkdir -p config/package-lists/
 
 $ echo "dialog apt debconf parted postfix mailutils sudo snmp snmpd openssh-client openssh-server ntp ebtables bridge-utils logwatch iputils-ping logcheck netbase update-inetd tcpd dhcpcd5 rsyslog rsync patch rdate genext2fs vim-tiny nano locales user-setup coreutils" > config/package-lists/minimal.list.chroot
 
-$ sudo lb config -a i386 -k 686 --debootstrap-options "--variant=minbase" --debian-installer live --binary-image iso-hybrid --security true --debian-installer false --memtest none --source false --bootloader syslinux --bootappend-live "noautologin toram ip=frommedia quickreboot nofast noprompt boot=live config quiet splash persistence"
+$ sudo lb config -a i386 -k 686 --debootstrap-options "--variant=minbase" --debian-installer live --binary-image iso-hybrid --binary-indices false --security true --debian-installer false --memtest none --source false --bootloader syslinux --bootappend-live "noautologin toram ip=frommedia quickreboot nofast noprompt boot=live config quiet splash persistence"
 
 $ sudo lb build
 ```
