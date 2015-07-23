@@ -80,5 +80,5 @@ sleep 5
 unmount_all "$device" || exit 1
 
 # Format the new partition and print new table
-sudo mkfs.ext3 -L live-sn "${device}2" 
+sudo mkfs.ext3 -L persistence "${device}2" 
 sudo $parted_print
