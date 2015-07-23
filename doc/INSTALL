@@ -117,7 +117,7 @@ work, then log in as:
     username: user
     password: live
 
-    Change the root password with "sudo passwd"
+    Change the root password with "sudo passwd root"
 
     If there was a "user" account, it will be removed later.
 
@@ -198,17 +198,23 @@ Once you have edited your setup file, run it:
 
 16.  SSH
 
+You can enable SSH server access with:
+
+  dpkg-reconfigure openssh-server
+  
 By default, SSH access is enabled for the root user.  This may not be
 what you want.  You can reconfigure this in /etc/ssh/sshd_config and
 /etc/init.d/ssh, and use the normal Debian system for startup scripts.
+
 For example, you may want to restrict logins only to non-root users,
 or require the use of keys instead of allowing passwords.  At a minimum,
 you might want to restrict SSH logins to only the root user with:
 
-AllowUsers root
+  PermitRootLogin yes
+  AllowUsers root
 
-...Placed on a new line somewhere in /etc/ssh/sshd_config.  You can
-restart sshd after configuration changes with:
+... in /etc/ssh/sshd_config.  You can restart sshd after configuration 
+changes with:
 
 # /etc/init.d/ssh restart
 
@@ -229,7 +235,7 @@ ff02::3 ip6-allhosts
 
 If you don't add the line starting with "127.0.1.1", then mail and ntp
 are not likely to work properly.  After the edit, you want to restart
-ntp and postfix, at a minimum.
+ntp and snmpd, at a minimum.
 
 18.  Network time
 
@@ -239,11 +245,18 @@ server on system boot.  By default, Gnarwall also runs a local time
 server (ntp).  Some ntp settings are configured by Gnarwall's setup
 script.
 
+To reset the time:
+
+  rdate time.example.com
+  /etc/init.d/ntp restart
+
+... using a real time server address instead of time.example.com.
+
 19.  Mail
 
 Gnarwall runs a mail server so that logcheck messages can be sent to
-a systems administrator.  The mail server package used is Postfix.
-Some configuration of Postfix is done by Gnarwall's setup script.
+a systems administrator.  The mail server package used is snmpd.
+Some configuration of snmpd is done by Gnarwall's setup script.
 
 20.  Logcheck
 
@@ -259,3 +272,10 @@ edit this file by hand: /etc/snmp/snmpd.conf
 
 We have not automated logcheck tweaks for snmpd.  You may want to
 edit this file by hand: /etc/logcheck/ignore.d.server/snmpd
+
+22. DHCP
+
+If you are only using static IP addresses, you should remove DHCP:
+
+  apt-get remove isc-dhcp-client isc-dhcp-common dhcpcd5
+
