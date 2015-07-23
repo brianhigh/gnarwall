@@ -82,7 +82,7 @@ $ sudo lb build
 ```
 You should place your binary image file in the current working directory with the filename: `live-image-i386.hybrid.iso`. Elsewhere in this and other GnarWall documentation, we refer to this file as `binary.img`.
 
-We have uploaded a binary image made like this on [our Google Docs site](https://goo.gl/aoSRk4).  You can use this if you have trouble making your own, or simply want to get started right away.
+We have uploaded a binary image made like this on our [downloads page](https://sites.google.com/site/gnarwallproject/file-cabinet).  You can use this if you have trouble making your own, or simply want to get started right away.
 
 
 ### Installing the Image
