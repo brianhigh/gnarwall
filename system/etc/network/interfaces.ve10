@@ -1,0 +1,25 @@
+# /etc/network/interfaces -- configuration file for ifup(8), ifdown(8). Run:
+#   /etc/init.d/networking restart
+# to execute this file before the next reboot
+# Note: each interface must have its own paragraph separated by blank lines
+
+# The loopback interface
+auto lo
+iface lo inet loopback
+
+auto eth0
+iface eth0 inet static
+    address 192.168.1.1
+    netmask 255.255.255.0
+    network 192.168.1.0
+    broadcast 192.168.1.255
+    gateway 192.168.1.100
+
+auto eth0:1
+iface eth0:1 inet static
+    address 10.168.1.1
+    netmask 255.255.255.0
+    network 10.168.1.0
+    broadcast 10.168.1.255
+
+# this is the last line of /etc/network/interfaces
