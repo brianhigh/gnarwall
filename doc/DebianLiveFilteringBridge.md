@@ -784,7 +784,7 @@ For packages you included in your live build parameters, such as tzdata or opens
 
 ## Give it a try
 
-Please give this a try and let us know how it goes.  Also, any feedback on this recipe will be very helpful.
+Please give this a try and let us know how it goes.  You might like to read the [INSTALL](https://github.com/brianhigh/gnarwall/blob/master/doc/INSTALL) file for more specific instructions. Also, any feedback on this recipe will be very helpful.
 
 
 ## License
