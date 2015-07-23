@@ -1,7 +1,7 @@
 The following copyright statement applies to all GnarWall project files:
 
 GnarWall: Logical Firewall and Filtering Bridge
-Copyright © 2010-2012 University of Washington
+Copyright © University of Washington
 
     This file is part of GnarWall.
 
@@ -18,3 +18,7 @@ Copyright © 2010-2012 University of Washington
     You should have received a copy of the GNU General Public License
     along with GnarWall.  If not, see <http://www.gnu.org/licenses/>.
 
+The GnarWall logo image contains a modified version of a narwhal image 
+released into the public domain by Pearson Scott Foresman. This image is 
+found on our website and the splash image shown when GnarWall boots.
+See: https://commons.wikimedia.org/wiki/File:Narwhal_%28PSF%29.png
