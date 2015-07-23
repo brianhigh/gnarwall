@@ -87,7 +87,7 @@ We have uploaded a binary image made like this on our [downloads page](https://s
 
 ### Installing the Image
 
-You can now copy the binary.img file to your USB stick.  Not a regular "drag and drop" sort of copy, though.  You need to write this image to the USB device with a utility like dd.
+You can now copy the binary.img file to your USB stick.  Not a regular "drag and drop" sort of copy, though.  You need to write this image to the USB device with a utility like `dd`.
 
 Use a USB flash memory stick of at least 1 GB.  The image is less than 150 MB, but you will want space for your persistent files (log and configuration files).
 
