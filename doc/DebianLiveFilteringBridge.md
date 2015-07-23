@@ -65,7 +65,7 @@ You may also choose to save the other files for reference.  (The build system wi
 
 ### Alternate Method of Building the Image
 
-Alternatively, if you have a Debian "Jesse" system, you can also build the image yourself. Here is an example using [lb](https://packages.debian.org/jessie/live-build) version 4.0.3-1:
+Alternatively, if you have a Debian "Jesse" system, you can also build the image yourself. Here is an example using [lb](https://packages.debian.org/jessie/live-build) version 4.x:
 
 ```
 $ sudo apt-get install live-build debootstrap syslinux squashfs-tools genisoimage rsync
@@ -80,9 +80,9 @@ $ sudo lb config -a i386 -k 486 -b iso-hybrid --bootstrap debootstrap --debootst
 
 $ sudo lb build
 ```
-You should find your binary image file in the current working directory with the filename: live-image-i386.hybrid.iso
+You should place your binary image file in the current working directory with the filename: `live-image-i386.hybrid.iso`. Elsewhere in this and other GnarWall documentation, we refer to this file as `binary.img`.
 
-We have placed a image made like this on [our Google Docs site](http://goo.gl/Iv0BO).  You can use this if you have trouble making your own, or simply want to get started right away.
+We have uploaded a binary image made like this on [our Google Docs site](https://goo.gl/aoSRk4).  You can use this if you have trouble making your own, or simply want to get started right away.
 
 
 ### Installing the Image
@@ -214,35 +214,37 @@ sleep 5
 unmount_all "$DEV" || exit 1
 
 # Format the new partition and print new table
-sudo mkfs.ext3 -L live-sn "${DEV}2" 
+sudo mkfs.ext3 -L persistent "${DEV}2" 
 sudo $PTD_PRN
 ```
 
+### Persistence
+
+While we have created a persistent partition in the previous section, we need to add a configuration file to enable it.
+
+```
+$ unzip master.zip
+$ mkdir sdb2
+$ sudo mount /dev/sdb2 sdb2
+$ sudo cp gnarwall-master/system/persistence.conf sdb2/
+$ sudo sync
+$ sudo umount /dev/sdb2
+```
 
 ### Further Customization
 
-You may also wish to add new files or edit the syslinux configuration files on the USB image.
+You may also wish to add new files or edit the isolinux configuration files in the USB image. Since the binary 
+image partition is read-only, changes to these configuration files are made before building the image with `lb build`.
 
-You can add a custom [splash image](http://gnarwall.googlecode.com/files/gnarwall_squeeze_splash.zip), for example, during the live image build. When building from the command line `lb` utility, we use this option:
-
-```
-$ sudo lb config [...] --syslinux-splash splash/splash_640x480_stable.png
-```
-
-We offer this [splash image](http://gnarwall.googlecode.com/files/gnarwall_squeeze_splash.zip) in a zip archive.
-
-And you will probably want to set a countdown timer for syslinux so that it can boot without requiring user input. We configure this using:
-
-```
-$ sudo lb config [...] --syslinux-timeout 5
-```
+You can add a custom [splash image](https://github.com/brianhigh/gnarwall/blob/master/system/isolinux/splash.png) 
+or set a boot-menu countdown timer, for example. See [this patch file](https://github.com/brianhigh/gnarwall/blob/master/system/isolinux/isolinux.patch) for sample modifications.
 
 `Note: More suggestions are mentioned in the doc/INSTALL file included with the main GnarWall script archive (gnarwall_*.tgz).  Further, it includes a complete step-by-step installation guide for using all of the scripts and patches mentioned in this tutorial.`
 
 You can also place your other system files on the USB stick's persistent partition. We extract the GnarWall script archive and copy to the mounted ext3 partition:
 
 ```
-$ tar xvzf gnarwall_*.tgz
+$ unzip master.zip
 $ mkdir sdb2
 $ sudo mount /dev/sdb2 sdb2
 ```
@@ -250,13 +252,13 @@ $ sudo mount /dev/sdb2 sdb2
 Now you can place your NDC LFW tables file in usr/local/sbin and copy the scripts:
 
 ```
-$ sudo cp -R usr sdb2/
+$ sudo cp -R gnarwall-master/usr sdb2/
 ```
 
 And, likewise, you can place your NDC LFW interfaces file in etc/network and copy to the ext3 partition:
 
 ```
-$ sudo cp -R etc sdb2/
+$ sudo cp -R gnarwall-master/etc sdb2/
 ```
 
 If your files were generated from the NDC LFW website, you may need to modify them to work with GnarWall. This is covered next.
@@ -405,9 +407,9 @@ tables\_v4.patch:
   esac
 ```
 
-These two files (lfw\_fix\_v4.sh and tables\_v4.patch) can be downloaded [here](http://code.google.com/p/gnarwall/downloads/list).  After you extract them from the archive, you will want to place them both in the same folder with your tables and interfaces files.  Then you can run the lfw\_fix\_v4.sh bash script.
+These two files (lfw\_fix\_v4.sh and tables\_v4.patch) can be downloaded [here](https://github.com/brianhigh/gnarwall/archive/master.zip).  After you extract them from the archive, you will want to place them both in the same folder with your tables and interfaces files.  Then you can run the lfw\_fix\_v4.sh bash script.
 
-It should be noted that the [interfaces file](http://www.debian.org/doc/manuals/reference/ch05.en.html#_the_basic_syntax_of_etc_network_interfaces) will still need some more fixing to be fully compliant with the [modern Debian way of doing things](http://wiki.debian.org/BridgeNetworkConnections#A.2BAC8-etc.2BAC8-network.2BAC8-interfacesandbridging).
+It should be noted that the `interfaces` file will still need some more fixing to be fully compliant with the [modern Debian way of doing things](http://wiki.debian.org/BridgeNetworkConnections#A.2BAC8-etc.2BAC8-network.2BAC8-interfacesandbridging).
 
 
 So here is how an updated interfaces script might look for a Variation 4 Filtering Bridge:
@@ -733,23 +735,17 @@ $ sudo chown root /etc/rc.local /usr/local/sbin/*
 $ sudo chmod 0700 /etc/rc.local /usr/local/sbin/*
 ```
 
-If you prefer, you can simply do all of the customization manually after you boot the USB stick.  Your changes will be saved to the persistent partition when you reboot.  Alternatively, you can also force changes to the persistent partition (without rebooting) with:
+If you prefer, you can simply do all of the customization manually after you boot the USB stick.  Your changes will be saved to the persistent partition when you reboot.
+
+But the very first thing you should do when you log into the live system (username=user, password=live) is change the root password from the default empty password (no password)!  If you do not want to keep the default `user` account on the system, then log in as root and remove the default live user account. 
 
 ```
-$ sudo live-snapshot -f
+# userdel -f -r user
 ```
 
-... which acts something like save-config in Gibraltar.  If you want, you can place a wrapper script for this command in /usr/local/sbin/save-config:
+Otherwise be sure and change that password as well.
 
-```
-#!/bin/sh
-
-/sbin/live-snapshot -f
-```
-
-But the very first thing you should do when you log into the live system (username=user, password=live) is change the root password from the default empty password (no password)!  If you do not want to keep the default `user` account on the system, then log in as root and remove the default live user account. Otherwise be sure and change that password as well.
-
-You can also install and remove software with apt-get, aptitude, and dpkg -- from within the live system.  Just remember that package caches can fill your persistent partition fairly quickly, so run the associated clean command before restarting or snapshotting.
+You can also install and remove software with `apt-get`, `aptitude`, and `dpkg` -- from within the live system.  Just remember that package caches can fill your persistent partition fairly quickly, so run the associated clean command before restarting or snapshotting.
 
 For packages you included in your live build parameters, such as tzdata or postfix, you may want to run dpkg-reconfigure on them once to make sure they are configured they way you want them to be.
 
