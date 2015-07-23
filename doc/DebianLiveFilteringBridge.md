@@ -74,7 +74,7 @@ $ mkdir live-build
 $ cd live-build
 $ mkdir -p config/package-lists/
 
-$ echo "dialog apt debconf parted postfix mailutils sudo snmp snmpd openssh-client openssh-server ntp ebtables bridge-utils logwatch iputils-ping logcheck netbase update-inetd tcpd dhcpcd5 rsyslog rsync patch rdate genext2fs vim-tiny nano locales user-setup coreutils" > config/package-lists/minimal.list.chroot
+$ echo "dialog apt debconf parted exim4 mailutils sudo snmp snmpd openssh-client openssh-server ntp ebtables bridge-utils logwatch iputils-ping logcheck netbase update-inetd tcpd dhcpcd5 rsyslog rsync patch rdate genext2fs vim-tiny nano locales user-setup coreutils" > config/package-lists/minimal.list.chroot
 
 $ sudo lb config -a i386 -k 486 -b iso-hybrid --bootstrap debootstrap --debootstrap-options "--variant=minbase" --security true --apt-indices false --iso-application GnarWall --memtest none --source false --bootloader syslinux --bootappend-live "noautologin toram ip=frommedia quickreboot nofast noprompt boot=live config quiet splash persistence"
 
@@ -268,7 +268,7 @@ If your files were generated from the NDC LFW website, you may need to modify th
 
 Since things have changed a bit in the Linux world since the 2.4 kernel days (the kernel version that the NDC LFW scripts were designed for), we need to make some changes to these files.
 
-We have done some testing with the [Variation 4](https://staff.washington.edu/corey/fw/variations.html#variation4) (filtering bridge) scripts.  We have a bash script and patch (below) to update a Variation 4 interfaces and tables file.  Please read the comments in the script carefully and modify as needed.  Also, look through the patch file to see what is actually changing.
+We have done some testing with the [Variation 4](https://staff.washington.edu/corey/fw/variations.html#variation4) (filtering bridge) and [Variation e10](https://staff.washington.edu/corey/fw/fw.cgi?variation=e10) (logical firewall with NAT) scripts.  We have a bash script and patch (below) to update Variation 4 and Variation e10 interfaces and tables file.  Please read the comments in the script carefully and modify as needed.  Also, look through the patch file to see what is actually changing.
 
 lfw\_fix\_v4.sh:
 
@@ -446,6 +446,38 @@ iface br0 inet static
 ```
 
 (That file can be found in the GnarWall package as interfaces.v4.  You will need to edit it manually.)
+
+Similarly, this is an example `interfaces` file for a Variation e10 logical firewall:
+
+```
+# /etc/network/interfaces -- configuration file for ifup(8), ifdown(8). Run:
+#   /etc/init.d/networking restart
+# to execute this file before the next reboot
+# Note: each interface must have its own paragraph separated by blank lines
+
+# The loopback interface
+auto lo
+iface lo inet loopback
+
+auto eth0
+iface eth0 inet static
+    address 192.168.1.1
+    netmask 255.255.255.0
+    network 192.168.1.0
+    broadcast 192.168.1.255
+    gateway 192.168.1.100
+
+auto eth0:1
+iface eth0:1 inet static
+    address 10.168.1.1
+    netmask 255.255.255.0
+    network 10.168.1.0
+    broadcast 10.168.1.255
+
+# this is the last line of /etc/network/interfaces
+```
+
+(In the GnarWall package as interfaces.ve10.)
 
 And this iptables start script could be saved as: /etc/network/if-pre-up.d/iptables
 
@@ -745,9 +777,9 @@ But the very first thing you should do when you log into the live system (userna
 
 Otherwise be sure and change that password as well.
 
-You can also install and remove software with `apt-get`, `aptitude`, and `dpkg` -- from within the live system.  Just remember that package caches can fill your persistent partition fairly quickly, so run the associated clean command before restarting or snapshotting.
+You can also install and remove software with `apt-get` and `dpkg` -- from within the live system.  Just remember that package caches can fill your persistent partition fairly quickly, so run the associated clean command before restarting or snapshotting.
 
-For packages you included in your live build parameters, such as tzdata or postfix, you may want to run dpkg-reconfigure on them once to make sure they are configured they way you want them to be.
+For packages you included in your live build parameters, such as tzdata or openssh-server, you may want to run dpkg-reconfigure on them once to make sure they are configured they way you want them to be.
 
 
 ## Give it a try
