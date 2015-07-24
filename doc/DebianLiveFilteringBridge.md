@@ -239,9 +239,9 @@ You may also wish to add new files or edit the isolinux configuration files in t
 image partition is read-only, changes to these configuration files are made before building the image with `lb build`.
 
 You can add a custom [splash image](https://github.com/brianhigh/gnarwall/blob/master/system/isolinux/splash.png) 
-or set a boot-menu countdown timer, for example. See [this patch file](https://github.com/brianhigh/gnarwall/blob/master/system/isolinux/isolinux.patch) for sample modifications.
+or set a boot-menu countdown timer, for example. See our isolinux [patch files](https://github.com/brianhigh/gnarwall/tree/master/system/isolinux) for sample modifications.
 
-`Note: More suggestions are mentioned in the doc/INSTALL file included with the main GnarWall script archive (gnarwall_*.tgz).  Further, it includes a complete step-by-step installation guide for using all of the scripts and patches mentioned in this tutorial.`
+`Note: More suggestions are mentioned in the doc/INSTALL file included with the main GnarWall script archive (gnarwall-master.zip).  Further, it includes a complete step-by-step installation guide for using all of the scripts and patches mentioned in this tutorial.`
 
 You can also place your other system files on the USB stick's persistent partition. We extract the GnarWall script archive and copy to the mounted ext3 partition:
 
