@@ -1,5 +1,5 @@
 *** menu.cfg	2015-07-22 15:01:12.752856243 -0700
---- menu.cfg	2015-07-22 16:07:59.063129882 -0700
+--- menu.cfg	2015-07-24 12:27:12.089349103 -0700
 ***************
 *** 1,17 ****
 ! menu hshift 0
@@ -20,8 +20,8 @@
   
   menu clear
 --- 1,8 ----
-! menu hshift 8 
-! menu width 45
+! menu hshift 7 
+! menu width 49
   
   menu title Boot menu
   include stdmenu.cfg
@@ -29,7 +29,7 @@
   
   menu clear
 *** stdmenu.cfg	2015-07-22 15:06:35.295521054 -0700
---- stdmenu.cfg	2015-07-22 16:07:26.363666085 -0700
+--- stdmenu.cfg	2015-07-24 10:23:51.689100977 -0700
 ***************
 *** 5,11 ****
   menu color hotsel	1;7;37;40 #ffffffff #76a1d0ff *
@@ -43,7 +43,7 @@
   menu color hotsel	1;7;37;40 #ffffffff #76a1d0ff *
   menu color tabmsg	* #ffffffff #00000000 *
   menu color help		37;40 #ffdddd00 #00000000 none
-! menu vshift 16
+! menu vshift 15
   menu rows 10
   menu helpmsgrow 15
   # The command line must be at least one line from the bottom.
