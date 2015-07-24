@@ -36,7 +36,7 @@ Email Address:  you@example.com
                     patch rdate genext2fs vim-tiny nano locales coreutils
 
 [ Advanced chroot options ]
---linux-flavours:   686
+--linux-flavours:   686-pae
 --security:         true
 
 [ Advanced binary options ]
@@ -49,7 +49,8 @@ Email Address:  you@example.com
 
 (`*` = The options in the form change as the Debian Live project evolves so adapt accordingly.)
 
-You will want to use your own email address, of course.
+You will want to use your own email address, of course. For "--linux-flavours", you might prefer 
+something like 486 for older systems (e.g., for older processors such as 486, Pentium I, etc.).
 
 
 ### Downloading the Image
@@ -76,10 +77,11 @@ $ mkdir -p config/package-lists/
 
 $ echo "dialog apt debconf parted exim4 mailutils sudo snmp snmpd openssh-client openssh-server ntp ebtables bridge-utils logwatch iputils-ping logcheck netbase update-inetd tcpd dhcpcd5 rsyslog rsync patch rdate genext2fs vim-tiny nano locales user-setup coreutils" > config/package-lists/minimal.list.chroot
 
-$ sudo lb config -a i386 -k 486 -b iso-hybrid --bootstrap debootstrap --debootstrap-options "--variant=minbase" --security true --apt-indices false --iso-application GnarWall --memtest none --source false --bootloader syslinux --bootappend-live "noautologin toram ip=frommedia quickreboot nofast noprompt boot=live config quiet splash persistence"
+$ sudo lb config -a i386 -k 686-pae -b iso-hybrid --bootstrap debootstrap --debootstrap-options "--variant=minbase" --debian-installer live --security true --apt-indices false --iso-application GnarWall --memtest none --source false --bootloader syslinux --bootappend-live "noautologin toram ip=frommedia quickreboot nofast noprompt boot=live config quiet splash persistence"
 
 $ sudo lb build
 ```
+
 You should place your binary image file in the current working directory with the filename: `live-image-i386.hybrid.iso`. Elsewhere in this and other GnarWall documentation, we refer to this file as `binary.img`.
 
 We have uploaded a binary image made like this on our [downloads page](https://sites.google.com/site/gnarwallproject/file-cabinet).  You can use this if you have trouble making your own, or simply want to get started right away.
