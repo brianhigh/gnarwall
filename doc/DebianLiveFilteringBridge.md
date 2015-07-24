@@ -795,7 +795,7 @@ This tutorial and the code listed within is licensed under the [GNU General Publ
 
 ```
 GnarWall: Logical Firewall and Filtering Bridge
-Copyright © 2010-2012 University of Washington
+Copyright © University of Washington
 
 This file is part of GnarWall.
 
