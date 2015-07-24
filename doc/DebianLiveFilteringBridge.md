@@ -82,6 +82,8 @@ $ sudo lb config -a i386 -k 686-pae -b iso-hybrid --bootstrap debootstrap --debo
 $ sudo lb build
 ```
 
+If you do not wish to include a Debian Live installer with your image, then omit the string: --debian-installer live. This feature is not required and its omission will make for a noticeably smaller image, freeing up space on your live system storage device.
+
 You should place your binary image file in the current working directory with the filename: `live-image-i386.hybrid.iso`. Elsewhere in this and other GnarWall documentation, we refer to this file as `binary.img`.
 
 We have uploaded a binary image made like this on our [downloads page](https://sites.google.com/site/gnarwallproject/file-cabinet).  You can use this if you have trouble making your own, or simply want to get started right away.
@@ -240,6 +242,16 @@ image partition is read-only, changes to these configuration files are made befo
 
 You can add a custom [splash image](https://github.com/brianhigh/gnarwall/blob/master/system/isolinux/splash.png) 
 or set a boot-menu countdown timer, for example. See our isolinux [patch files](https://github.com/brianhigh/gnarwall/tree/master/system/isolinux) for sample modifications.
+
+For example, here is how you could patch the isolinux menu files for our custom menu preferences:
+
+```
+$ unzip master.zip
+$ cd gnarwall-master/system/isolinux
+$ patch -l -p0 < isolinux-with-installer.patch
+```
+
+This will remove the "advanced" menu options, move the menu to ovoid overlap with the splash image, and set a 10 second timout so the system can boot without any user interaction.
 
 `Note: More suggestions are mentioned in the doc/INSTALL file included with the main GnarWall script archive (gnarwall-master.zip).  Further, it includes a complete step-by-step installation guide for using all of the scripts and patches mentioned in this tutorial.`
 
