@@ -82,7 +82,7 @@ $ sudo lb config -a i386 -k 686-pae -b iso-hybrid --bootstrap debootstrap --debo
 $ sudo lb build
 ```
 
-If you do not wish to include a Debian Live installer with your image, then omit the string: --debian-installer live. This feature is not required and its omission will make for a noticeably smaller image, freeing up space on your live system storage device.
+If you do not wish to include a Debian Live installer with your image, then omit the string: --debian-installer live. 
 
 You should place your binary image file in the current working directory with the filename: `live-image-i386.hybrid.iso`. Elsewhere in this and other GnarWall documentation, we refer to this file as `binary.img`.
 
