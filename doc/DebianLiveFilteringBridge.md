@@ -71,14 +71,15 @@ Alternatively, if you have a Debian "Jesse" system, you can also build the image
 ```
 $ sudo apt-get install live-build debootstrap syslinux squashfs-tools genisoimage rsync
 
-$ mkdir live-build
+$ unzip gnarwall-master.zip
+$ mkdir -p live-build/config/bootloaders/isolinux/
 $ cd live-build
-$ mkdir -p config/package-lists/
 
 $ echo "dialog apt debconf parted exim4 mailutils sudo snmp snmpd openssh-client openssh-server ntp ebtables bridge-utils logwatch iputils-ping logcheck netbase update-inetd tcpd dhcpcd5 rsyslog rsync patch rdate genext2fs vim-tiny nano locales user-setup coreutils" > config/package-lists/minimal.list.chroot
 
 $ sudo lb config -a i386 -k 686-pae -b iso-hybrid --bootstrap debootstrap --debootstrap-options "--variant=minbase" --debian-installer live --security true --apt-indices false --iso-application GnarWall --memtest none --source false --bootloader syslinux --bootappend-live "noautologin toram ip=frommedia quickreboot nofast noprompt boot=live config quiet splash persistence"
 
+$ sudo lb clean --purge  # Only needed if you are rebuilding after a previous attempt... 
 $ sudo lb build
 ```
 
@@ -237,21 +238,34 @@ $ sudo umount /dev/sdb2
 
 ### Further Customization
 
-You may also wish to add new files or edit the isolinux configuration files in the USB image. Since the binary 
-image partition is read-only, changes to these configuration files are made before building the image with `lb build`.
+You may also wish to add additional files to the persistent partition or customize your custom image. Since the 
+binary image partition is read-only, changes to these configuration files are made before building the image 
+with `lb build`.
 
 You can add a custom [splash image](https://github.com/brianhigh/gnarwall/blob/master/system/isolinux/splash.png) 
-or set a boot-menu countdown timer, for example. See our isolinux [patch files](https://github.com/brianhigh/gnarwall/tree/master/system/isolinux) for sample modifications.
+or set a boot-menu countdown timer, for example. See our isolinux 
+[patch files](https://github.com/brianhigh/gnarwall/tree/master/system/isolinux) for sample modifications.
 
-For example, here is how you could patch the isolinux menu files for our custom menu preferences:
+For example, here is how you could patch the isolinux menu files for our custom menu preferences and replace 
+the default splash image (SVG) with our custom image (PNG):
 
 ```
 $ unzip master.zip
-$ cd gnarwall-master/system/isolinux
+$ mkdir -p live-build/config/bootloaders/isolinux/
+$ cp gnarwall-master/system/isolinux/isolinux-with-installer.patch live-build/config/bootloaders/isolinux/
+$ cp gnarwall-master/system/isolinux/splash.png live-build/config/bootloaders/isolinux/
+$ cd live-build/
+$ echo "[...]" > config/package-lists/minimal.list.chroot  # Use an actual package list in place of [...]
+$ lb config [...]        # Use whatever options you like in place of [...], as in the "lb" examples above
+$ cd config/bootloaders/isolinux/
+$ rm -f splash.svg
 $ patch -l -p0 < isolinux-with-installer.patch
+$ cd ../../../
+$ sudo lb clean --purge  # Only needed if you are rebuilding after a previous attempt... 
+$ sudo lb build          # To make your custom iso image
 ```
 
-This will remove the "advanced" menu options, move the menu to ovoid overlap with the splash image, and set a 10 second timout so the system can boot without any user interaction.
+This will remove the "advanced" menu options, move the menu to avoid overlap with the splash image, and set a 10 second timout so the system can boot without any user interaction. It will still include the menu choices for the live installer.
 
 `Note: More suggestions are mentioned in the doc/INSTALL file included with the main GnarWall script archive (gnarwall-master.zip).  Further, it includes a complete step-by-step installation guide for using all of the scripts and patches mentioned in this tutorial.`
 
