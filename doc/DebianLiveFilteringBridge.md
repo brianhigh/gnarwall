@@ -12,7 +12,7 @@ Download the latest [GnarWall scripts](https://github.com/brianhigh/gnarwall/arc
 You can extract them on a Linux system with:
 
 ```
-$ unzip master.zip
+$ unzip gnarwall-master.zip
 ```
 
 
@@ -246,7 +246,7 @@ or set a boot-menu countdown timer, for example. See [this patch file](https://g
 You can also place your other system files on the USB stick's persistent partition. We extract the GnarWall script archive and copy to the mounted ext3 partition:
 
 ```
-$ unzip master.zip
+$ unzip gnarwall-master.zip
 $ mkdir sdb2
 $ sudo mount /dev/sdb2 sdb2
 ```
