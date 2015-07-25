@@ -18,6 +18,10 @@ $ unzip gnarwall-master.zip
 
 ## Debian Live Disk Image
 
+To get a live disk image, you can build your own, with either the web-based live-build or command-line utilities, or you can download one made especially for use with GnarWall. All three methods are presented below.
+
+### Web-based live-build
+
 Go to: http://cgi.build.live-systems.org/cgi-bin/live-build
 
 Fill out the web form`*` as shown in this example configuration:
@@ -53,7 +57,7 @@ You will want to use your own email address, of course. For "--linux-flavours", 
 something like 486 for older systems (e.g., for older processors such as 486, Pentium I, etc.).
 
 
-### Downloading the Image
+#### Downloading the Image
 
 After a few minutes you will be able to download your image.
 
@@ -64,9 +68,9 @@ Download the files and check the MD5 sum of the image against the MD5 sum listed
 You may also choose to save the other files for reference.  (The build system will include the configuration files in the build folder.)
 
 
-### Alternate Method of Building the Image
+### Command-line live-build utilities
 
-Alternatively, if you have a Debian "Jesse" system, you can also build the image yourself. Here is an example using [lb](https://packages.debian.org/jessie/live-build) version 4.x:
+Alternatively, if you have a Linux system, you can also build the image yourself. Here is an example using [lb](https://packages.debian.org/jessie/live-build) version 4.x running on Debian "Jesse":
 
 ```
 $ sudo apt-get install live-build debootstrap syslinux squashfs-tools genisoimage rsync
@@ -75,35 +79,49 @@ $ unzip gnarwall-master.zip
 $ mkdir -p live-build/config/bootloaders/isolinux/
 $ cd live-build
 
-$ echo "dialog apt debconf parted exim4 mailutils sudo snmp snmpd openssh-client openssh-server ntp ebtables bridge-utils logwatch iputils-ping logcheck netbase update-inetd tcpd dhcpcd5 rsyslog rsync patch rdate genext2fs vim-tiny nano locales user-setup coreutils" > config/package-lists/minimal.list.chroot
+$ echo "dialog apt debconf parted exim4 mailutils sudo snmp snmpd openssh-client openssh-server ntp ebtables bridge-utils logwatch iputils-ping logcheck netbase update-inetd tcpd rsyslog rsync patch rdate genext2fs vim-tiny nano locales user-setup coreutils" > config/package-lists/minimal.list.chroot
 
-$ sudo lb config -a i386 -k 686-pae -b iso-hybrid --bootstrap debootstrap --debootstrap-options "--variant=minbase" --debian-installer live --security true --apt-indices false --iso-application GnarWall --memtest none --source false --bootloader syslinux --bootappend-live "noautologin toram ip=frommedia quickreboot nofast noprompt boot=live config quiet splash persistence"
+$ sudo lb config -a i386 -k 686-pae -b iso-hybrid --bootstrap debootstrap --debootstrap-options "--variant=minbase" --security true --apt-indices false --iso-application GnarWall --memtest none --source false --bootloader syslinux --bootappend-live "noautologin toram ip=frommedia quickreboot nofast noprompt boot=live config quiet splash persistence"
 
 $ sudo lb clean --purge  # Only needed if you are rebuilding after a previous attempt... 
 $ sudo lb build
 ```
 
-If you do not wish to include a Debian Live installer with your image, then omit the string: --debian-installer live. 
+If you wish to include a Debian Live installer with your image, then add "dhcpcd5" to your list of packages 
+and add this string to your `lb config` line: --debian-installer live. 
 
-You should place your binary image file in the current working directory with the filename: `live-image-i386.hybrid.iso`. Elsewhere in this and other GnarWall documentation, we refer to this file as `binary.img`.
+You should find your binary image file in the current working directory with the filename: `live-image-i386.hybrid.iso`. Elsewhere in this and other GnarWall documentation, we refer to this file as `binary.img`, so you might want to rename your file to `binary.img`.
 
-We have uploaded a binary image made like this on our [downloads page](https://sites.google.com/site/gnarwallproject/file-cabinet).  You can use this if you have trouble making your own, or simply want to get started right away.
+### Download custom images
+
+We have uploaded a few sample binary images made like this to our [downloads page](https://sites.google.com/site/gnarwallproject/file-cabinet).  
+You can use one of these if you have trouble making one your own, or simply want to get started right away.
 
 
-### Installing the Image
+## Installing the Image
 
-You can now copy the binary.img file to your USB stick.  Not a regular "drag and drop" sort of copy, though.  You need to write this image to the USB device with a utility like `dd`.
+You can now copy the `binary.img` file to your USB stick.  Not a regular "drag and drop" sort of copy, though.  You need to write this image to the USB device with a utility like `dd` (though there are other ways that will work).
 
-Use a USB flash memory stick of at least 1 GB.  The image is less than 150 MB, but you will want space for your persistent files (log and configuration files).
+Use a USB flash memory stick of at least 1 GB.  The image is only a few hundred MB, but you will want space for your persistent files (log and configuration files).
 
 You will lose any data already on the USB device, so backup anything that you would want to keep.
 
-When you connect your USB device to a Linux system, you can check dmesg to see the device name it was provided.
+When you connect your USB device to a Linux system, you can check `dmesg` or the `messages` or `syslog` files to 
+see the device name it was provided. Make sure no partitions on the USB device are already mounted, but do not 
+"eject" it.
+
+### Installing the "hard way" (manually)
 
 Here is how you can write the image to the USB stick, assuming it is assigned to /dev/sdb:
 
 ```
 $ sudo dd if=binary.img of=/dev/sdb bs=1M
+```
+
+This would also work:
+
+```
+$ sudo cp binary.img /dev/sdb
 ```
 
 You will likely want to add a persistent (snapshot) partition.  You can do this with fdisk and mkfs.ext3
@@ -121,7 +139,7 @@ w (enter)
 This is to make a (n) new (p) primary partition, number (2), starting at the next available cylinder (the default) and ending at the last cylinder (the default), then (w) write changes and exit the fdisk utility.
 
 
-### Formatting the Partition
+#### Formatting the Partition
 
 ```
 $ sudo mkfs.ext3 -L live-sn /dev/sdb2
@@ -132,7 +150,7 @@ This adds the live-sn label which tells Debian Live to use it for persistent liv
 If you use some other labels supported by live-initramfs, you can get other behavior, like live real-time read-write functionality.  (We opted for the snapshot option to minimize disk activity.)
 
 
-### Automating the Disk Preparation
+### Installing the "easy way" (using a script)
 
 All of steps in this section (Installing the Image and Formatting the Partition) can be accomplished by running this bash shell script:
 
@@ -265,11 +283,14 @@ $ sudo lb clean --purge  # Only needed if you are rebuilding after a previous at
 $ sudo lb build          # To make your custom iso image
 ```
 
-This will remove the "advanced" menu options, move the menu to avoid overlap with the splash image, and set a 10 second timout so the system can boot without any user interaction. It will still include the menu choices for the live installer.
+This will remove the "advanced" menu options, move the menu to avoid overlap with the splash image, and set a 
+10 second timout so the system can boot without any user interaction. It will still include the menu choices 
+for the live installer.
 
 `Note: More suggestions are mentioned in the doc/INSTALL file included with the main GnarWall script archive (gnarwall-master.zip).  Further, it includes a complete step-by-step installation guide for using all of the scripts and patches mentioned in this tutorial.`
 
-You can also place your other system files on the USB stick's persistent partition. We extract the GnarWall script archive and copy to the mounted ext3 partition:
+You can also place your other system files on the USB stick's persistent partition. We extract the GnarWall 
+script archive and copy to the mounted ext3 partition:
 
 ```
 $ unzip gnarwall-master.zip
@@ -277,13 +298,13 @@ $ mkdir sdb2
 $ sudo mount /dev/sdb2 sdb2
 ```
 
-Now you can place your NDC LFW tables file in usr/local/sbin and copy the scripts:
+Now you can place your NDC LFW `tables` file in `usr/local/sbin` and copy the scripts:
 
 ```
 $ sudo cp -R gnarwall-master/usr sdb2/
 ```
 
-And, likewise, you can place your NDC LFW interfaces file in etc/network and copy to the ext3 partition:
+And, likewise, you can place your NDC LFW `interfaces` file in `etc/network` and copy to the `ext3` partition:
 
 ```
 $ sudo cp -R gnarwall-master/etc sdb2/
@@ -296,7 +317,11 @@ If your files were generated from the NDC LFW website, you may need to modify th
 
 Since things have changed a bit in the Linux world since the 2.4 kernel days (the kernel version that the NDC LFW scripts were designed for), we need to make some changes to these files.
 
-We have done some testing with the [Variation 4](https://staff.washington.edu/corey/fw/variations.html#variation4) (filtering bridge) and [Variation e10](https://staff.washington.edu/corey/fw/fw.cgi?variation=e10) (logical firewall with NAT) scripts.  We have a bash script and patch (below) to update Variation 4 and Variation e10 interfaces and tables file.  Please read the comments in the script carefully and modify as needed.  Also, look through the patch file to see what is actually changing.
+We have done some testing with the [Variation 4](https://staff.washington.edu/corey/fw/variations.html#variation4) 
+(filtering bridge) and [Variation e10](https://staff.washington.edu/corey/fw/fw.cgi?variation=e10) (logical 
+firewall with NAT) scripts.  We have a bash script and patch (below) to update Variation 4 and Variation e10 
+interfaces and tables file.  Please read the comments in the script carefully and modify as needed.  Also, look 
+through the patch file to see what is actually changing.
 
 lfw\_fix\_v4.sh:
 
