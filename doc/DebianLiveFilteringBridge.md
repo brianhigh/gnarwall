@@ -142,10 +142,10 @@ This is to make a (n) new (p) primary partition, number (2), starting at the nex
 #### Formatting the Partition
 
 ```
-$ sudo mkfs.ext3 -L live-sn /dev/sdb2
+$ sudo mkfs.ext3 -L persistent /dev/sdb2
 ```
 
-This adds the live-sn label which tells Debian Live to use it for persistent live-snapshots.
+This adds the `persistent` label which tells Debian Live to use it for live-snapshot storage.
 
 If you use some other labels supported by live-initramfs, you can get other behavior, like live real-time read-write functionality.  (We opted for the snapshot option to minimize disk activity.)
 
