@@ -1,9 +1,11 @@
 HOW TO SETUP A "JESSIE" DEBIAN LIVE USB SYSTEM WITH GNARWALL
 
 Assuming you are going to be updating from a Gibraltar NDC LFW 
-Variation 4 system...
+Variation e10 or Variation 4 system...
 
-1.  Get the Gnarwall files and place them in a suitable folder
+For configuration file generators, see: https://staff.washington.edu/corey/fw/
+
+1.  Get the GnarWall files and place them in a suitable folder
 on your linux system.
 
 You can get these files from here:
@@ -20,9 +22,8 @@ for this.  Use a folder on the local filesystem instead.
 
 2.  Uncompress the Gnarwall package archives into that folder.
 
-3.  Get a copy of the old tables and interfaces files from the
-Gibralter system to be converted and place them in the "convert"
-subfolder.
+3.  Get a copy of the old ("generated") tables and interfaces files to be converted 
+and place them in the "convert" subfolder.
 
 4.  "cd" to that folder and run: ./lfw_fix_v4.sh
 
