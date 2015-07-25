@@ -275,7 +275,8 @@ edit this file by hand: /etc/logcheck/ignore.d.server/snmpd
 
 22. DHCP
 
-If you are only using static IP addresses, you should remove DHCP:
+If you are only using static IP addresses, but a DHCP client is 
+installed, then you can remove the DHCP client packages:
 
   apt-get remove isc-dhcp-client isc-dhcp-common dhcpcd5
 
