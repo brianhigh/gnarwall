@@ -54,7 +54,7 @@ Email Address:  you@example.com
 (`*` = The options in the form change as the Debian Live project evolves so adapt accordingly.)
 
 You will want to use your own email address, of course. For "--linux-flavours", you might prefer 
-something like 486 for older systems (e.g., for older processors such as 486, Pentium I, etc.).
+something like 486 for older systems (e.g., for older processors such as Intel 486, Pentium-I, etc.).
 
 
 #### Downloading the Image
