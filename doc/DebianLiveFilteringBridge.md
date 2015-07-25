@@ -183,14 +183,14 @@ the default splash image (SVG) with our custom image (PNG):
 ```
 $ unzip master.zip
 $ mkdir -p live-build/config/bootloaders/isolinux/
-$ cp gnarwall-master/system/isolinux/isolinux-with-installer.patch live-build/config/bootloaders/isolinux/
+$ cp gnarwall-master/system/isolinux/isolinux.patch live-build/config/bootloaders/isolinux/
 $ cp gnarwall-master/system/isolinux/splash.png live-build/config/bootloaders/isolinux/
 $ cd live-build/
 $ echo "[...]" > config/package-lists/minimal.list.chroot  # Use an actual package list in place of [...]
 $ lb config [...]        # Use whatever options you like in place of [...], as in the "lb" examples above
 $ cd config/bootloaders/isolinux/
 $ rm -f splash.svg
-$ patch -l -p0 < isolinux-with-installer.patch
+$ patch -l -p0 < isolinux.patch
 $ cd ../../../
 $ sudo lb clean --purge  # Only needed if you are rebuilding after a previous attempt... 
 $ sudo lb build          # To make your custom iso image
