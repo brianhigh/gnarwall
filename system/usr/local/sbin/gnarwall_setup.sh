@@ -20,14 +20,15 @@ bell='none'            # Set to 'none', 'visible', or '' for audible
 gnarwall=/etc/gnarwall
 gnarwall_conf=$gnarwall/configured
 
-# Create /etc/resolv.conf if it does not already exist
-resolv_conf=/etc/resolv.conf
+# Create /etc/resolvconf/resolv.conf.d/base if it does not already exist
+resolv_conf=/etc/resolvconf/resolv.conf.d/base
 
 [ -s $resolv_conf ] || cat > $resolv_conf <<EOF
 search $dns_search_order
 nameserver $nameserver1
 nameserver $nameserver2
 EOF
+resolvconf -u
 
 # Set time from campus time server
 rdate -s $timeserver
