@@ -13,7 +13,7 @@
 # then modify the patch file accordingly before you run this script.
 #
 # For more NDC LFW information: http://staff.washington.edu/corey/fw/ 
-# Debian Live Builder: http://live-build.debian.net/cgi-bin/live-build 
+# Debian Live Builder: http://cgi.build.live-systems.org/cgi-bin/live-build 
 
 # Check for presence of writable tables and interfaces files
 if [ ! -w tables ] || [ ! -w interfaces ]; then \
