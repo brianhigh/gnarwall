@@ -6,6 +6,8 @@
 # NDC LFW scripts for use with Debian Live (Lenny and newer) and other
 # modern Debian-based Linux distributions. 
 #
+# From the GnarWall project: https://github.com/brianhigh/gnarwall/
+#
 # DANGER: This has NOT been widely tested.  USE AT YOUR OWN RISK!
 #
 # NOTE: This will work only for 2-NIC configurations where eth0 is the
@@ -13,7 +15,8 @@
 # then modify the patch file accordingly before you run this script.
 #
 # For more NDC LFW information: http://staff.washington.edu/corey/fw/ 
-# Debian Live Builder: http://cgi.build.live-systems.org/cgi-bin/live-build 
+# Debian live-build: http://live.debian.net/devel/live-build/ 
+# web-based builder: http://cgi.build.live-systems.org/cgi-bin/live-build
 
 # Check for presence of writable tables and interfaces files
 if [ ! -w tables ] || [ ! -w interfaces ]; then \
